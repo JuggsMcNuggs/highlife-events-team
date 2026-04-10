@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Highlife · Events Team Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<style>
+:root{--bg:#0a0a0f;--s1:#111118;--s2:#1a1a24;--s3:#22222e;--brd:#2a2a3a;--accent:#c084fc;--accent2:#818cf8;--accentG:rgba(192,132,252,.12);--gold:#fbbf24;--red:#f87171;--green:#4ade80;--t1:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--t4:#475569;--t5:#334155;--mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;--display:'Bebas Neue',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--t1);font-family:var(--sans);min-height:100vh;overflow-x:hidden}
+
+/* NAV */
+.topnav{background:linear-gradient(135deg,#0f0f1a,#1a0a2e);border-bottom:1px solid var(--brd);padding:0 28px;display:flex;align-items:center;height:56px;position:sticky;top:0;z-index:200}
+.topnav .logo{font-family:var(--display);font-size:1.8rem;letter-spacing:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-right:6px;flex-shrink:0}
+.topnav .logo-sub{font-size:.6rem;color:var(--t3);letter-spacing:2px;text-transform:uppercase;margin-right:24px;flex-shrink:0}
+.nav-tabs{display:flex;gap:2px;height:100%;align-items:stretch}
+.nav-tab{padding:0 18px;display:flex;align-items:center;gap:6px;font-size:.8rem;font-weight:500;color:var(--t3);cursor:pointer;border:none;background:none;font-family:var(--sans);border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.nav-tab:hover{color:var(--t2);background:rgba(255,255,255,.02)}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.nav-tab .badge{font-size:.63rem;background:var(--s2);color:var(--t3);padding:1px 6px;border-radius:8px;font-family:var(--mono)}
+.nav-tab.active .badge{background:var(--accent);color:#000}
+.nav-user{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:.78rem;color:var(--t3)}
+.nav-user img{width:28px;height:28px;border-radius:50%;border:1px solid var(--brd)}
+.btn-signin{background:var(--accent);color:#000;border:none;padding:6px 14px;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:var(--sans)}
+
+/* TOOLBAR */
+.toolbar{padding:12px 28px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--s1);border-bottom:1px solid var(--brd)}
+.search-wrap{position:relative;flex:1;min-width:160px;max-width:300px}
+.search-wrap input{width:100%;background:var(--s2);border:1px solid var(--brd);border-radius:8px;padding:8px 12px 8px 32px;color:var(--t1);font-family:var(--sans);font-size:.83rem;outline:none;transition:border-color .15s}
+.search-wrap input:focus{border-color:var(--accent)}
+.search-wrap::before{content:'\1F50D';position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:.75rem;pointer-events:none}
+.cat-filters{display:flex;gap:4px;flex-wrap:wrap;flex:2}
+.cat-btn{padding:4px 10px;border-radius:18px;border:1px solid var(--brd);background:var(--s2);color:var(--t3);cursor:pointer;font-size:.7rem;font-weight:500;transition:all .15s;white-space:nowrap;font-family:var(--sans)}
+.cat-btn:hover{color:var(--t1)}
+.cat-btn.active{color:#000;font-weight:700;border-color:transparent;background:var(--accent)}
+.cat-btn.fav-btn.active{background:var(--gold)}
+.cat-btn.pawn-btn.active{background:var(--green)}
+.cat-btn.wpn-btn.active{background:var(--red)}
+
+/* GRID */
+.grid-wrap{padding:16px 28px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.card{background:var(--s1);border:1px solid var(--brd);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;transition:border-color .15s,transform .1s;position:relative;overflow:hidden;cursor:pointer}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity .2s;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.card:hover::before{opacity:1}
+.card.copied{border-color:var(--green)}
+.card.copied::before{background:var(--green);opacity:1}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:5px}
+.card-name{font-weight:500;font-size:.85rem;line-height:1.3;flex:1}
+.card-code{font-family:var(--mono);font-size:.7rem;color:var(--accent2);background:var(--s2);padding:3px 7px;border-radius:5px;word-break:break-all}
+.card-bottom{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-top:auto}
+.cat-pill{font-size:.6rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 6px;border-radius:10px;background:var(--s2);color:var(--t3)}
+.card-actions{display:flex;gap:3px}
+.btn-sm{font-size:.66rem;padding:3px 7px;border-radius:5px;border:1px solid var(--brd);cursor:pointer;font-family:var(--sans);font-weight:500;transition:all .15s;background:var(--s2);color:var(--t3)}
+.btn-sm:hover{border-color:var(--accent);color:var(--accent)}
+.card-fav{background:none;border:none;cursor:pointer;font-size:.9rem;padding:2px;opacity:.2;transition:opacity .15s,transform .15s;color:var(--gold)}
+.card-fav:hover{opacity:.6;transform:scale(1.15)}
+.card-fav.active{opacity:1}
+.pawn-val{font-family:var(--mono);font-size:.7rem;color:var(--green);font-weight:500}
+.cat-edit{background:var(--s2);border:1px solid var(--brd);color:var(--t2);padding:2px 4px;border-radius:4px;font-size:.62rem;font-family:var(--sans);cursor:pointer;outline:none;max-width:90px}
+
+/* PAWN VIEW */
+.pawn-list{display:flex;flex-direction:column;gap:0}
+.pawn-row{display:grid;grid-template-columns:1fr 1.5fr auto;gap:16px;align-items:center;padding:9px 16px;border-bottom:1px solid #131320;cursor:pointer;transition:background .1s}
+.pawn-row:hover{background:var(--accentG)}
+.pawn-row .name{font-size:.88rem;color:var(--t1);font-weight:500}
+.pawn-row .code{font-family:var(--mono);font-size:.78rem;color:var(--accent2)}
+.pawn-row .price{font-family:var(--mono);font-size:.88rem;color:var(--green);text-align:right;font-weight:600}
+
+/* LISTS */
+.lists-layout{display:flex;min-height:calc(100vh - 120px)}
+.lists-sidebar{width:250px;min-width:250px;border-right:1px solid var(--brd);background:var(--s1);display:flex;flex-direction:column}
+.lists-sidebar-hdr{padding:14px 16px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between}
+.lists-sidebar-hdr h3{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:var(--t3)}
+.btn-accent{background:var(--accent);color:#000;border:none;border-radius:6px;padding:5px 10px;font-size:.7rem;font-weight:700;cursor:pointer;font-family:var(--sans)}
+.btn-accent:hover{opacity:.85}
+.list-items{flex:1;overflow-y:auto;padding:8px}
+.list-item{padding:9px 11px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px;transition:background .1s;margin-bottom:2px;border-left:3px solid transparent}
+.list-item:hover{background:var(--s2)}
+.list-item.active{background:var(--s2);border-left-color:var(--accent)}
+.list-item-name{font-size:.83rem;font-weight:500;flex:1}
+.list-item-count{font-size:.66rem;color:var(--t3);font-family:var(--mono)}
+.list-item-del{opacity:0;font-size:.72rem;color:var(--red);cursor:pointer;background:none;border:none;padding:2px 4px;transition:opacity .15s}
+.list-item:hover .list-item-del{opacity:1}
+.list-content{flex:1;overflow-y:auto;padding:20px 24px}
+.list-empty{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--t3)}
+.list-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--brd)}
+.list-header h2{font-family:var(--display);font-size:1.6rem;letter-spacing:3px;color:var(--accent)}
+.list-header-actions{display:flex;gap:6px;align-items:center}
+.list-search{background:var(--s2);border:1px solid var(--brd);border-radius:6px;padding:6px 10px;color:var(--t1);font-family:var(--sans);font-size:.8rem;outline:none;width:180px}
+.list-search:focus{border-color:var(--accent)}
+.list-meta{font-size:.72rem;color:var(--t3);font-family:var(--mono);margin-top:2px}
+.list-added-by{font-size:.6rem;color:var(--t4);font-family:var(--mono);margin-top:2px}
+
+/* INTERVIEWS */
+.int-layout{display:flex;min-height:calc(100vh - 120px)}
+.int-sidebar{width:280px;min-width:280px;border-right:1px solid var(--brd);background:var(--s1);display:flex;flex-direction:column}
+.int-filters{padding:10px 12px;border-bottom:1px solid var(--brd);display:flex;gap:4px;flex-wrap:wrap}
+.status-btn{padding:4px 10px;border-radius:14px;border:1px solid var(--brd);background:var(--s2);color:var(--t3);font-size:.68rem;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .15s}
+.status-btn.active{border-color:transparent}
+.status-btn[data-s="Awaiting"].active{background:var(--gold);color:#000}
+.status-btn[data-s="Interviewed"].active{background:var(--accent);color:#000}
+.status-btn[data-s="Accepted"].active{background:var(--green);color:#000}
+.status-btn[data-s="Denied"].active{background:var(--red);color:#000}
+.status-btn[data-s="All"].active{background:var(--accent2);color:#000}
+.int-cards{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:6px}
+.int-card{background:var(--s2);border:1px solid var(--brd);border-radius:8px;padding:10px 12px;cursor:pointer;transition:all .15s}
+.int-card:hover{border-color:var(--accent)}
+.int-card.active{border-color:var(--accent);background:var(--accentG)}
+.int-card-name{font-weight:600;font-size:.86rem;margin-bottom:2px}
+.int-card-meta{font-size:.7rem;color:var(--t3);font-family:var(--mono)}
+.int-card-date{font-size:.65rem;color:var(--t4);font-family:var(--mono);margin-top:2px}
+.int-card-status{display:inline-block;font-size:.6rem;font-weight:700;padding:2px 7px;border-radius:10px;margin-top:4px;letter-spacing:.5px}
+.int-card-status[data-s="Awaiting"]{background:rgba(251,191,36,.15);color:var(--gold)}
+.int-card-status[data-s="Interviewed"]{background:var(--accentG);color:var(--accent)}
+.int-card-status[data-s="Accepted"]{background:rgba(74,222,128,.15);color:var(--green)}
+.int-card-status[data-s="Denied"]{background:rgba(248,113,113,.15);color:var(--red)}
+.int-detail{flex:1;overflow-y:auto;padding:24px}
+.int-detail-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--t4);font-size:.88rem}
+.int-detail-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--brd)}
+.int-detail-header h2{font-family:var(--display);font-size:1.8rem;letter-spacing:3px;color:var(--accent)}
+.int-info-grid{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.info-pill{font-size:.7rem;padding:4px 10px;border-radius:6px;background:var(--s2);border:1px solid var(--brd);color:var(--t2);font-family:var(--mono)}
+.int-section-title{font-size:.7rem;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:10px;margin-top:20px;font-weight:600}
+.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qa-card{background:var(--s2);border:1px solid var(--brd);border-radius:8px;padding:12px}
+.qa-card .q{font-size:.78rem;font-weight:600;color:var(--t1);margin-bottom:8px;line-height:1.4}
+.qa-card textarea{width:100%;background:var(--bg);border:1px solid var(--brd);border-radius:6px;padding:8px 10px;color:var(--t1);font-family:var(--sans);font-size:.8rem;outline:none;resize:vertical;min-height:70px;transition:border-color .15s;margin:0}
+.qa-card textarea:focus{border-color:var(--accent)}
+.vote-section{margin-top:20px}
+.vote-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1a1a24;font-size:.83rem}
+.vote-yes{color:var(--green);font-weight:600}
+.vote-no{color:var(--red);font-weight:600}
+.vote-comment{color:var(--t3);font-size:.76rem;font-style:italic;margin-left:4px}
+.vote-btn{padding:6px 16px;border-radius:6px;border:1px solid var(--brd);background:var(--s2);color:var(--t2);font-size:.78rem;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .15s}
+.vote-btn.yes:hover,.vote-btn.yes.cast{background:var(--green);color:#000;border-color:var(--green)}
+.vote-btn.no:hover,.vote-btn.no.cast{background:var(--red);color:#000;border-color:var(--red)}
+
+/* MODALS */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--s1);border:1px solid var(--brd);border-radius:14px;padding:26px;width:420px;max-width:92vw;max-height:85vh;overflow-y:auto}
+.modal h3{font-family:var(--display);font-size:1.3rem;letter-spacing:2px;margin-bottom:14px;color:var(--accent)}
+.modal input,.modal textarea,.modal select{width:100%;background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:9px 13px;color:var(--t1);font-family:var(--sans);font-size:.85rem;outline:none;margin-bottom:10px;transition:border-color .15s}
+.modal input:focus,.modal textarea:focus{border-color:var(--accent)}
+.modal textarea{resize:vertical;min-height:80px}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+.btn-cancel{padding:7px 15px;border-radius:7px;border:1px solid var(--brd);background:transparent;color:var(--t3);cursor:pointer;font-family:var(--sans);font-size:.8rem}
+.btn-confirm{padding:7px 15px;border-radius:7px;border:none;background:var(--accent);color:#000;font-weight:700;cursor:pointer;font-family:var(--sans);font-size:.8rem}
+.btn-confirm:hover{opacity:.85}
+.btn-danger{padding:7px 15px;border-radius:7px;border:1px solid var(--red);background:transparent;color:var(--red);cursor:pointer;font-family:var(--sans);font-size:.8rem}
+.btn-danger:hover{background:var(--red);color:#000}
+
+/* Q EDITOR */
+.q-editor-list{display:flex;flex-direction:column;gap:6px}
+.q-editor-row{display:flex;gap:8px;align-items:center;background:var(--s2);border:1px solid var(--brd);border-radius:8px;padding:8px 12px}
+.q-editor-row input{flex:1;background:transparent;border:none;color:var(--t1);font-size:.83rem;font-family:var(--sans);outline:none;margin:0;padding:4px 0}
+.q-editor-row .q-num{font-family:var(--mono);font-size:.7rem;color:var(--accent);font-weight:600;flex-shrink:0}
+.q-del-btn{background:none;border:none;color:var(--t4);cursor:pointer;font-size:.88rem;padding:2px 4px;transition:color .15s}
+.q-del-btn:hover{color:var(--red)}
+
+/* LIST PICKER */
+.list-picker{display:flex;flex-direction:column;gap:5px;max-height:240px;overflow-y:auto;margin-bottom:12px}
+.list-pick-item{padding:9px 13px;border-radius:7px;border:1px solid var(--brd);cursor:pointer;font-size:.83rem;background:var(--s2);transition:all .12s;display:flex;align-items:center;justify-content:space-between}
+.list-pick-item:hover{border-color:var(--accent);color:var(--accent)}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--accent);color:#000;padding:10px 28px;font-family:var(--mono);font-size:.8rem;font-weight:700;letter-spacing:1px;z-index:999;pointer-events:none;opacity:0;transition:all .25s;border-radius:8px}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:60px 20px;color:var(--t4);grid-column:1/-1}
+.empty-big{font-family:var(--display);font-size:2rem;letter-spacing:3px;color:var(--brd);display:block;margin-bottom:8px}
+
+/* STATUS SELECT */
+.status-select{background:var(--s2);border:1px solid var(--brd);color:var(--t1);padding:4px 8px;border-radius:6px;font-size:.76rem;font-family:var(--sans);outline:none;cursor:pointer}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--t5);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--t4)}
+
+footer{text-align:center;padding:18px;font-size:.7rem;color:var(--t4);border-top:1px solid var(--brd);margin-top:8px;font-family:var(--mono);letter-spacing:.5px}
+.section{display:none}.section.active{display:block}
+</style>
+</head>
+<body>
+
+<!-- LOGIN GATE -->
+<div id="login-gate" style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;background:var(--bg)">
+<div style="text-align:center">
+<div style="font-family:var(--display);font-size:2.4rem;letter-spacing:5px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px">EVENTS TEAM HUB</div>
+<div style="font-size:.65rem;color:var(--t4);letter-spacing:3px;margin-bottom:32px">HIGHLIFE RP · AUTHORIZED ACCESS ONLY</div>
+<input type="password" id="gate-code" placeholder="ACCESS CODE" style="background:var(--s1);border:1px solid var(--brd);color:var(--t1);padding:14px 20px;font-size:.9rem;letter-spacing:3px;font-family:var(--mono);text-align:center;width:280px;outline:none;border-radius:8px" onkeydown="if(event.key==='Enter')tryLogin()" autofocus>
+<div style="margin-top:12px"><button onclick="tryLogin()" style="background:var(--accent);color:#000;border:none;padding:12px 40px;font-size:.75rem;font-weight:700;letter-spacing:3px;cursor:pointer;font-family:var(--sans);border-radius:6px">ENTER</button></div>
+<div id="gate-err" style="color:var(--red);font-size:.72rem;margin-top:10px;height:16px;letter-spacing:1px"></div>
+</div>
+</div>
+
+<!-- NAME PICKER (shown after code accepted, first time only) -->
+<div id="name-gate" style="display:none;align-items:center;justify-content:center;height:100vh;flex-direction:column;background:var(--bg)">
+<div style="text-align:center">
+<div style="font-family:var(--display);font-size:1.6rem;letter-spacing:3px;color:var(--accent);margin-bottom:6px">ONE MORE THING</div>
+<div style="font-size:.8rem;color:var(--t3);margin-bottom:24px">What should we call you?</div>
+<input type="text" id="name-input" placeholder="Your name" style="background:var(--s1);border:1px solid var(--brd);color:var(--t1);padding:14px 20px;font-size:.9rem;font-family:var(--sans);text-align:center;width:280px;outline:none;border-radius:8px" onkeydown="if(event.key==='Enter')setName()" autofocus>
+<div style="margin-top:12px"><button onclick="setName()" style="background:var(--accent);color:#000;border:none;padding:12px 40px;font-size:.75rem;font-weight:700;letter-spacing:3px;cursor:pointer;font-family:var(--sans);border-radius:6px">LET'S GO</button></div>
+</div>
+</div>
+
+<!-- MAIN APP (hidden until authenticated) -->
+<div id="main-app" style="display:none">
+<nav class="topnav">
+<span class="logo">EVENTS TEAM HUB</span>
+<span class="logo-sub">Highlife RP</span>
+<div class="nav-tabs">
+<button class="nav-tab active" onclick="switchSection('items')" data-section="items">Items <span class="badge" id="badge-items">0</span></button>
+<button class="nav-tab" onclick="switchSection('weapons')" data-section="weapons">Weapons <span class="badge" id="badge-weapons">0</span></button>
+<button class="nav-tab" onclick="switchSection('vehicles')" data-section="vehicles">Vehicles <span class="badge" id="badge-vehicles">0</span></button>
+<button class="nav-tab" onclick="switchSection('favorites')" data-section="favorites">Favorites <span class="badge" id="badge-favorites">0</span></button>
+<button class="nav-tab" onclick="switchSection('lists')" data-section="lists">Lists <span class="badge" id="badge-lists">0</span></button>
+<button class="nav-tab" onclick="switchSection('interviews')" data-section="interviews">Interviews <span class="badge" id="badge-interviews">0</span></button>
+</div>
+<div class="nav-user" id="nav-user"></div>
+</nav>
+
+<div class="section active" id="sec-items">
+<div class="toolbar">
+<div class="search-wrap"><input type="text" id="items-search" placeholder="Search items..." oninput="renderItems()"></div>
+<div class="cat-filters" id="items-cats"></div>
+</div>
+<div class="grid-wrap" id="items-content"></div>
+</div>
+
+<div class="section" id="sec-weapons">
+<div class="toolbar">
+<div class="search-wrap"><input type="text" id="wpn-search" placeholder="Search weapons..." oninput="renderWeapons()"></div>
+<div class="cat-filters" id="wpn-cats"></div>
+</div>
+<div class="grid-wrap"><div class="grid" id="wpn-grid"></div></div>
+</div>
+
+<div class="section" id="sec-vehicles">
+<div class="toolbar">
+<div class="search-wrap"><input type="text" id="veh-search" placeholder="Search vehicles..." oninput="renderVehicles()"></div>
+<div class="cat-filters" id="veh-cats"></div>
+</div>
+<div class="grid-wrap"><div class="grid" id="veh-grid"></div></div>
+</div>
+
+<div class="section" id="sec-favorites">
+<div class="toolbar">
+<div class="search-wrap"><input type="text" id="fav-search" placeholder="Search favorites..." oninput="renderFavorites()"></div>
+<div style="margin-left:auto"><button class="btn-accent" onclick="openModal('modal-customfav')">+ Custom Entry</button></div>
+</div>
+<div class="grid-wrap" id="fav-content"></div>
+</div>
+
+<div class="section" id="sec-lists">
+<div class="lists-layout">
+<div class="lists-sidebar">
+<div class="lists-sidebar-hdr"><h3>Shared Lists</h3><button class="btn-accent" onclick="openModal('modal-newlist')">+ New</button></div>
+<div class="list-items" id="lists-sidebar-items"></div>
+</div>
+<div id="lists-content" class="list-empty"><span class="empty-big">NO LIST SELECTED</span><span style="font-size:.8rem">Create or select a list</span></div>
+</div>
+</div>
+
+<div class="section" id="sec-interviews">
+<div class="int-layout">
+<div class="int-sidebar">
+<div class="lists-sidebar-hdr"><h3>Candidates</h3><div style="display:flex;gap:4px"><button class="btn-accent" onclick="openModal('modal-newcandidate')">+ Add</button><button class="btn-sm" onclick="openModal('modal-editquestions')" style="font-size:.66rem">Edit Q's</button></div></div>
+<div class="int-filters" id="int-filters"></div>
+<div class="int-cards" id="int-cards"></div>
+</div>
+<div id="int-detail" class="int-detail-empty">Select a candidate</div>
+</div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-customfav"><div class="modal"><h3>Add Custom Entry</h3>
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Name / Label</label><input type="text" id="cf-name" placeholder="e.g. New Vehicle Name">
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Spawn Code</label><input type="text" id="cf-code" placeholder="e.g. spawncode123">
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Type</label>
+<select id="cf-type" style="width:100%;background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:9px 13px;color:var(--t1);font-family:var(--sans);font-size:.85rem;margin-bottom:10px"><option value="item">Item</option><option value="vehicle">Vehicle</option><option value="weapon">Weapon</option><option value="custom">Custom</option></select>
+<div class="modal-btns"><button class="btn-cancel" onclick="closeModal('modal-customfav')">Cancel</button><button class="btn-confirm" onclick="addCustomFav()">Add to Favorites</button></div></div></div>
+
+<div class="modal-overlay" id="modal-newlist"><div class="modal"><h3>New List</h3><input type="text" id="input-newlist" placeholder="e.g. 4th of July, Funeral RP..." maxlength="40" onkeydown="if(event.key==='Enter')createList()"><div class="modal-btns"><button class="btn-cancel" onclick="closeModal('modal-newlist')">Cancel</button><button class="btn-confirm" onclick="createList()">Create</button></div></div></div>
+
+<div class="modal-overlay" id="modal-addtolist"><div class="modal"><h3>Add to List</h3><div class="list-picker" id="list-picker-items"></div><div class="modal-btns"><button class="btn-cancel" onclick="closeModal('modal-addtolist')">Cancel</button></div></div></div>
+
+<div class="modal-overlay" id="modal-newcandidate"><div class="modal"><h3>New Candidate</h3>
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Name</label><input type="text" id="cand-name" placeholder="Character / Player name">
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Discord</label><input type="text" id="cand-discord" placeholder="Discord handle">
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Steam ID</label><input type="text" id="cand-steam" placeholder="Steam ID">
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Character Name</label><input type="text" id="cand-character" placeholder="In-game character name">
+<div class="modal-btns"><button class="btn-cancel" onclick="closeModal('modal-newcandidate')">Cancel</button><button class="btn-confirm" onclick="createCandidate()">Add Candidate</button></div></div></div>
+
+<div class="modal-overlay" id="modal-editquestions"><div class="modal" style="width:600px"><h3>Interview Questions</h3><p style="font-size:.76rem;color:var(--t3);margin-bottom:14px">Changes apply to new interviews. Existing answers stay intact.</p><div class="q-editor-list" id="q-editor-list"></div><div style="margin-top:10px;display:flex;gap:8px"><input type="text" id="q-new-input" placeholder="Add a new question..." style="flex:1" onkeydown="if(event.key==='Enter')addQuestion()"><button class="btn-confirm" onclick="addQuestion()">Add</button></div><div class="modal-btns" style="margin-top:14px"><button class="btn-confirm" onclick="closeModal('modal-editquestions')">Done</button></div></div></div>
+
+<div class="modal-overlay" id="modal-vote"><div class="modal"><h3>Cast Your Vote</h3><div style="display:flex;gap:10px;margin-bottom:12px"><button class="vote-btn yes" id="vote-yes-btn" onclick="selectVote('yes')" style="flex:1">YES</button><button class="vote-btn no" id="vote-no-btn" onclick="selectVote('no')" style="flex:1">NO</button></div><textarea id="vote-comment" placeholder="Optional comment..." style="min-height:60px"></textarea><div class="modal-btns"><button class="btn-cancel" onclick="closeModal('modal-vote')">Cancel</button><button class="btn-confirm" onclick="submitVote()">Submit</button></div></div></div>
+
+<div class="toast" id="toast"></div>
+<footer>Created by JuggsMcNuggs &nbsp;·&nbsp; Built with her A.I. Levi.</footer>
+</div><!-- end main-app -->
+
+<div class="modal-overlay" id="modal-admingate"><div class="modal"><h3>Admin Access</h3>
+<input type="password" id="admin-code-input" placeholder="Admin code" onkeydown="if(event.key==='Enter')checkAdmin()">
+<div id="admin-err" style="font-size:.72rem;height:16px;color:var(--red)"></div>
+<div class="modal-btns"><button class="btn-cancel" onclick="closeModal('modal-admingate')">Cancel</button><button class="btn-confirm" onclick="checkAdmin()">Enter</button></div></div></div>
+
+<div class="modal-overlay" id="modal-changecode"><div class="modal"><h3>Change Access Code</h3>
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Current Code</label>
+<input type="password" id="cc-old" placeholder="Current code">
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">New Code</label>
+<input type="password" id="cc-new" placeholder="New code">
+<div id="cc-msg" style="font-size:.72rem;height:16px;margin-top:2px"></div>
+<div class="modal-btns"><button class="btn-cancel" onclick="closeModal('modal-changecode')">Cancel</button><button class="btn-confirm" onclick="changeAccessCode()">Update</button></div></div></div>
+
+<script>
+const RI=[{"c":"parachute","l":"Parachute","t":"Event & Misc"},{"c":"beer","l":"Beer","t":"Drinks"},{"c":"vodka","l":"Vodka","t":"Drinks"},{"c":"lockpick","l":"Lockpick","t":"Heist"},{"c":"joint","l":"Medical Cannabis","t":"Weed"},{"c":"black_chip","l":"Darknet SIM Card","t":"Heist"},{"c":"gps","l":"GPS","t":"Event & Misc"},{"c":"umbrella","l":"Umbrella","t":"Event & Misc"},{"c":"bong","l":"Bong","t":"Drugs"},{"c":"rose","l":"Rose","t":"Event & Misc"},{"c":"binos","l":"Binoculars","t":"Event & Misc"},{"c":"handcuffs","l":"Handcuffs","t":"Event & Misc"},{"c":"radio","l":"Portable Radio (Music)","t":"Event & Misc"},{"c":"vest","l":"Bulletproof Vest","t":"Medical"},{"c":"cards","l":"Pack of Cards","t":"Event & Misc"},{"c":"coin","l":"Flipping Coin","t":"Event & Misc"},{"c":"ammo_pistol","l":"Pistol Ammunition (36 rounds)","t":"Ammo"},{"c":"ammo_smg","l":"SMG Ammunition (30 rounds)","t":"Ammo"},{"c":"ammo_rifle","l":"Rifle Ammunition (30 rounds)","t":"Ammo"},{"c":"ammo_shotgun","l":"Shotgun Ammunition (16 rounds)","t":"Ammo"},{"c":"rod","l":"Fishing Rod","t":"Fishing"},{"c":"bait","l":"Fishing Bait","t":"Fishing"},{"c":"catfish","l":"Catfish","t":"Fishing"},{"c":"trout","l":"Trout","t":"Fishing"},{"c":"bass","l":"Bass","t":"Fishing"},{"c":"rtrout","l":"Rainbow Trout","t":"Fishing"},{"c":"stingray","l":"Stingray","t":"Fishing"},{"c":"shark","l":"Shark Fin","t":"Fishing"},{"c":"dice","l":"6 Sided Dice","t":"Event & Misc"},{"c":"painkillers","l":"Painkillers","t":"Medical"},{"c":"repairkit","l":"Repair Kit","t":"Medical"},{"c":"cyanide","l":"Cyanide","t":"Drugs"},{"c":"dolphin","l":"Dolphin Fin","t":"Fishing"},{"c":"orca","l":"Orca Fin","t":"Fishing"},{"c":"hump","l":"Whale Blubber","t":"Fishing"},{"c":"safe_drill","l":"Industrial Drill","t":"Heist"},{"c":"plasma_cutter","l":"Plasma Cutter","t":"Heist"},{"c":"raw_meat","l":"Raw Meat","t":"Food"},{"c":"hunting_knife","l":"Hunting Knife","t":"Event & Misc"},{"c":"stingers","l":"Stinger Strips","t":"Heist"},{"c":"keypad_cracker","l":"DES Cracking Module","t":"Heist"},{"c":"broken_safe_drill","l":"Industrial Drill (Broken)","t":"Heist"},{"c":"pvest","l":"Bulletproof Vest (LSPD)","t":"Medical"},{"c":"plastic_handcuffs","l":"Zip Tie","t":"Event & Misc"},{"c":"jail_card","l":"Get Out of Jail Free Card","t":"Event & Misc"},{"c":"uno_reverse_card","l":"Uno Reverse Card","t":"Event & Misc"},{"c":"chance_card","l":"Chance Card","t":"Event & Misc"},{"c":"tracker","l":"Government tracker","t":"Event & Misc"},{"c":"hotdog_water","l":"Hot Dog Water","t":"Food"},{"c":"jbomb","l":"Gay Bomb","t":"Event & Misc"},{"c":"blast_charge","l":"Blast Charge","t":"Heist"},{"c":"ind_drill","l":"Drill","t":"Heist"},{"c":"drill_bit","l":"Industrial Drill Bit","t":"Heist"},{"c":"circuit_board","l":"Circuit Board","t":"Tools"},{"c":"tv","l":"Widescreen TV","t":"Event & Misc"},{"c":"car_battery","l":"Car Battery","t":"Event & Misc"},{"c":"lithium","l":"Lithium","t":"Event & Misc"},{"c":"drain_cleaner","l":"Drain Cleaner","t":"Event & Misc"},{"c":"sulfuric_acid","l":"Sulfuric Acid","t":"Event & Misc"},{"c":"respirator","l":"Respirator","t":"Medical"},{"c":"plastic_bottle","l":"Plastic Bottle","t":"Tools"},{"c":"paint_thinner","l":"Paint Thinner","t":"Event & Misc"},{"c":"acetone_acid","l":"Acetone","t":"Event & Misc"},{"c":"brake_fluid","l":"Brake Fluid","t":"Event & Misc"},{"c":"toluene","l":"Toluene","t":"Event & Misc"},{"c":"lab_equipment","l":"Lab Equipment","t":"Tools"},{"c":"chemistry_kit","l":"My First: Chemistry Kit","t":"Tools"},{"c":"remote_explosives","l":"Remote Explosives","t":"Heist"},{"c":"phone","l":"Cell Phone","t":"Event & Misc"},{"c":"cocaine_bag","l":"Cocaine (Bag)","t":"Drugs"},{"c":"cocaine_weight","l":"Cocaine (Slab)","t":"Drugs"},{"c":"cocaine_brick","l":"Cocaine (Brick)","t":"Drugs"},{"c":"property_racks","l":"Industrial Racks","t":"Property"},{"c":"property_table","l":"Heavy Duty Table","t":"Property"},{"c":"property_scales","l":"Industrial Scales","t":"Property"},{"c":"property_press","l":"Hydraulic Press","t":"Property"},{"c":"property_vents","l":"Ventilation Equipment","t":"Property"},{"c":"property_insulation","l":"Industrial Insulation (Roll)","t":"Property"},{"c":"property_ind_light","l":"Industrial Grade Light","t":"Property"},{"c":"property_generator","l":"Industrial Generator","t":"Property"},{"c":"heroin_bag","l":"Heroin (Bag)","t":"Drugs"},{"c":"blueprint_coke_1","l":"Blueprint (Coke Lab)","t":"Blueprints"},{"c":"bandage","l":"Bandage","t":"Medical"},{"c":"seal_bags","l":"Resealable Bags","t":"Tools"},{"c":"scales","l":"Portable Digital Scales","t":"Tools"},{"c":"cocaine_block","l":"Cocaine (Block)","t":"Drugs"},{"c":"tam_wine","l":"Buckfast Tonic Wine","t":"Drinks"},{"c":"gasmask","l":"Gas Mask","t":"Medical"},{"c":"usb_key","l":"USB (SSO Key)","t":"Heist"},{"c":"eightball","l":"Magic 8 Ball","t":"Event & Misc"},{"c":"gsrkit","l":"Gunshot Residue Kit","t":"Medical"},{"c":"can","l":"Metal Can","t":"Event & Misc"},{"c":"glass_bottle","l":"Glass Bottle","t":"Event & Misc"},{"c":"orange","l":"Orange","t":"Food"},{"c":"lsd","l":"LSD","t":"Drugs"},{"c":"grapes","l":"Grapes","t":"Food"},{"c":"meth_tray_a","l":"Crystal Meth Tray (Blue)","t":"Drugs"},{"c":"meth_tray_b","l":"Crystal Meth Tray (Clear)","t":"Drugs"},{"c":"meth_tray_c","l":"Crystal Meth Tray (Cloudy)","t":"Drugs"},{"c":"meth_tray_d","l":"Crystal Meth Tray (White)","t":"Drugs"},{"c":"meth_bag_a","l":"Meth Bag (Blue)","t":"Drugs"},{"c":"meth_bag_b","l":"Meth Bag (Clear)","t":"Drugs"},{"c":"meth_bag_c","l":"Meth Bag (Cloudy)","t":"Drugs"},{"c":"meth_bag_d","l":"Meth Bag (White)","t":"Drugs"},{"c":"tray","l":"Baking Tray","t":"Tools"},{"c":"ammo_hunting","l":"Hunting Ammunition (16 rounds)","t":"Ammo"},{"c":"gold_nugget","l":"Gold Nugget","t":"Valuables"},{"c":"uncut_diamond","l":"Uncut Diamond (Large)","t":"Mining"},{"c":"toolbag","l":"Toolbox","t":"Tools"},{"c":"disk_cutter","l":"Industrial Angle Grinder","t":"Tools"},{"c":"cable_roll","l":"Cable (Roll)","t":"Tools"},{"c":"designer_watch","l":"Crowex Watch","t":"Valuables"},{"c":"gold_chain","l":"Crowex Gold Chain","t":"Valuables"},{"c":"pearl_necklace","l":"Crowex Pearl Necklace","t":"Food"},{"c":"laptop","l":"Laptop","t":"Event & Misc"},{"c":"fur_coat","l":"Fur Coat","t":"Valuables"},{"c":"diamond_earrings","l":"Crowex Diamond Earrings","t":"Valuables"},{"c":"warrant","l":"Search Warrant","t":"Event & Misc"},{"c":"avacado","l":"Avocado","t":"Event & Misc"},{"c":"cleaning_kit","l":"AK Cleaning Kit","t":"Event & Misc"},{"c":"medical_kit","l":"Medical Kit","t":"Medical"},{"c":"blueprint_meth_1","l":"Blueprints (Meth Lab)","t":"Blueprints"},{"c":"mod_muzzle_flat","l":"Flat Muzzle Brake (Mod)","t":"Weapon Mods"},{"c":"mod_muzzle_tactical","l":"Tactical Muzzle Brake (Mod)","t":"Weapon Mods"},{"c":"mod_muzzle_fatend","l":"Fat-End Muzzle Brake (Mod)","t":"Weapon Mods"},{"c":"mod_muzzle_precision","l":"Precision Muzzle Brake (Mod)","t":"Weapon Mods"},{"c":"mod_muzzle_heavyduty","l":"Heavy Duty Muzzle Brake (Mod)","t":"Weapon Mods"},{"c":"mod_muzzle_slanted","l":"Slanted Muzzle Brake (Mod)","t":"Weapon Mods"},{"c":"mod_muzzle_splitend","l":"Split-End Muzzle Brake (Mod)","t":"Weapon Mods"},{"c":"mod_switchblade_lux_finish_1","l":"Switchblade - VIP (Mod)","t":"Weapon Mods"},{"c":"mod_switchblade_lux_finish_2","l":"Switchblade - Bodyguard (Mod)","t":"Weapon Mods"},{"c":"mod_knuckle_lux_finish_1","l":"Knuckles - Pimp (Mod)","t":"Weapon Mods"},{"c":"mod_knuckle_lux_finish_2","l":"Knuckles - Ballas (Mod)","t":"Weapon Mods"},{"c":"mod_knuckle_lux_finish_3","l":"Knuckles - Hustler (Mod)","t":"Weapon Mods"},{"c":"mod_knuckle_lux_finish_4","l":"Knuckles - Rock (Mod)","t":"Weapon Mods"},{"c":"mod_knuckle_lux_finish_5","l":"Knuckles - Hater (Mod)","t":"Weapon Mods"},{"c":"mod_knuckle_lux_finish_6","l":"Knuckles - Lover (Mod)","t":"Weapon Mods"},{"c":"mod_knuckle_lux_finish_7","l":"Knuckles - Player (Mod)","t":"Weapon Mods"},{"c":"mod_knuckle_lux_finish_8","l":"Knuckles - King (Mod)","t":"Weapon Mods"},{"c":"mod_knuckle_lux_finish_9","l":"Knuckles - Vagos (Mod)","t":"Weapon Mods"},{"c":"mod_pistol_holo_sight","l":"Pistol - Holo Sight (Mod)","t":"Weapon Mods"},{"c":"mod_pistol_small_scope","l":"Pistol - Small Scope (Mod)","t":"Weapon Mods"},{"c":"mod_pistol_compensator","l":"Pistol - Compensator (Mod)","t":"Weapon Mods"},{"c":"mod_pistol_extended_mag","l":"Pistol - Extended Mag (Mod)","t":"Weapon Mods"},{"c":"mod_pistol_flashlight","l":"Pistol - Flashlight (Mod)","t":"Weapon Mods"},{"c":"mod_pistol_suppressor","l":"Pistol - Suppressor (Mod)","t":"Weapon Mods"},{"c":"mod_smg_extended_mag","l":"SMG - Extended Mag (Mod)","t":"Weapon Mods"},{"c":"mod_smg_drum_mag","l":"SMG - Drum Mag (Mod)","t":"Weapon Mods"},{"c":"mod_smg_small_scope","l":"SMG - Small Scope (Mod)","t":"Weapon Mods"},{"c":"mod_smg_medium_scope","l":"SMG - Medium Scope (Mod)","t":"Weapon Mods"},{"c":"mod_smg_flashlight","l":"SMG - Flashlight (Mod)","t":"Weapon Mods"},{"c":"mod_smg_suppressor","l":"SMG - Suppressor (Mod)","t":"Weapon Mods"},{"c":"mod_smg_heavy_barrel","l":"SMG - Heavy Barrel (Mod)","t":"Weapon Mods"},{"c":"mod_smg_grip","l":"SMG - Grip (Mod)","t":"Weapon Mods"},{"c":"mod_shotgun_flashlight","l":"Shotgun - Flashlight (Mod)","t":"Weapon Mods"},{"c":"mod_shotgun_suppressor","l":"Shotgun - Suppressor (Mod)","t":"Weapon Mods"},{"c":"mod_shotgun_extended_mag","l":"Shotgun - Extended Mag (Mod)","t":"Weapon Mods"},{"c":"mod_shotgun_drug_mag","l":"Shotgun - Drum Mag (Mod)","t":"Weapon Mods"},{"c":"mod_shotgun_grip","l":"Shotgun - Grip (Mod)","t":"Weapon Mods"},{"c":"mod_rifle_extended_mag","l":"Rifle - Extended Mag (Mod)","t":"Weapon Mods"},{"c":"mod_rifle_drum_mag","l":"Rifle - Drum Mag (Mod)","t":"Weapon Mods"},{"c":"mod_rifle_flashlight","l":"Rifle - Flashlight (Mod)","t":"Weapon Mods"},{"c":"mod_rifle_suppressor","l":"Rifle - Suppressor (Mod)","t":"Weapon Mods"},{"c":"mod_rifle_grip","l":"Rifle - Grip (Mod)","t":"Weapon Mods"},{"c":"mod_rifle_holo_sight","l":"Rifle - Holo Sight (Mod)","t":"Weapon Mods"},{"c":"mod_rifle_medium_scope","l":"Rifle - Medium Scope (Mod)","t":"Weapon Mods"},{"c":"mod_rifle_scope","l":"Rifle - Scope (Mod)","t":"Weapon Mods"},{"c":"mod_rifle_heavy_barrel","l":"Rifle - Heavy Barrel (Mod)","t":"Weapon Mods"},{"c":"mod_rifle_lux_finish","l":"Rifle - Luxe (Mod)","t":"Weapon Mods"},{"c":"mod_pistol_lux_finish","l":"Pistol - Luxe #1 (Mod)","t":"Weapon Mods"},{"c":"mod_pistol_lux_finish_1","l":"Pistol - Luxe #2 (Mod)","t":"Weapon Mods"},{"c":"mod_pistol_lux_finish_2","l":"Pistol - Luxe #3 (Mod)","t":"Weapon Mods"},{"c":"mod_shotgun_lux_finish","l":"Shotgun - Luxe (Mod)","t":"Weapon Mods"},{"c":"mod_pistol_skin_digital","l":"Pistol - Digital Skin (Mod)","t":"Weapon Mods"},{"c":"mod_pistol_skin_brushstroke","l":"Pistol - Brushstroke Skin (Mod)","t":"Weapon Mods"},{"c":"mod_pistol_skin_woodland","l":"Pistol - Woodland Skin (Mod)","t":"Weapon Mods"},{"c":"mod_pistol_skin_skull","l":"Pistol - Skull Skin (Mod)","t":"Weapon Mods"},{"c":"mod_pistol_skin_sessanta","l":"Pistol - Sessanta Skin (Mod)","t":"Weapon Mods"},{"c":"mod_pistol_skin_perseus","l":"Pistol - Perseus Skin (Mod)","t":"Weapon Mods"},{"c":"mod_pistol_skin_leopard","l":"Pistol - Leopard Skin (Mod)","t":"Weapon Mods"},{"c":"mod_pistol_skin_zebra","l":"Pistol - Zebra Skin (Mod)","t":"Weapon Mods"},{"c":"mod_pistol_skin_geometric","l":"Pistol - Geometric Skin (Mod)","t":"Weapon Mods"},{"c":"mod_pistol_skin_boom","l":"Pistol - Boom Skin (Mod)","t":"Weapon Mods"},{"c":"mod_pistol_skin_patriotic","l":"Pistol - Patriotic Skin (Mod)","t":"Weapon Mods"},{"c":"mod_smg_skin_digital","l":"SMG - Digital Skin (Mod)","t":"Weapon Mods"},{"c":"mod_smg_skin_brushstroke","l":"SMG - Brushstroke Skin (Mod)","t":"Weapon Mods"},{"c":"mod_smg_skin_woodland","l":"SMG - Woodland Skin (Mod)","t":"Weapon Mods"},{"c":"mod_smg_skin_skull","l":"SMG - Skull Skin (Mod)","t":"Weapon Mods"},{"c":"mod_smg_skin_sessanta","l":"SMG - Sessanta Skin (Mod)","t":"Weapon Mods"},{"c":"mod_smg_skin_perseus","l":"SMG - Perseus Skin (Mod)","t":"Weapon Mods"},{"c":"mod_smg_skin_leopard","l":"SMG - Leopard Skin (Mod)","t":"Weapon Mods"},{"c":"mod_smg_skin_zebra","l":"SMG - Zebra Skin (Mod)","t":"Weapon Mods"},{"c":"mod_smg_skin_geometric","l":"SMG - Geometric Skin (Mod)","t":"Weapon Mods"},{"c":"mod_smg_skin_boom","l":"SMG - Boom Skin (Mod)","t":"Weapon Mods"},{"c":"mod_smg_skin_patriotic","l":"SMG - Patriotic Skin (Mod)","t":"Weapon Mods"},{"c":"mod_shotgun_skin_digital","l":"Shotgun - Digital Skin (Mod)","t":"Weapon Mods"},{"c":"mod_shotgun_skin_brushstroke","l":"Shotgun - Brushstoke Skin (Mod)","t":"Weapon Mods"},{"c":"mod_shotgun_skin_woodland","l":"Shotgun - Woodland Skin (Mod)","t":"Weapon Mods"},{"c":"mod_shotgun_skin_skull","l":"Shotgun - Skull Skin (Mod)","t":"Weapon Mods"},{"c":"mod_shotgun_skin_sessanta","l":"Shotgun - Sessanta Skin (Mod)","t":"Weapon Mods"},{"c":"mod_shotgun_skin_perseus","l":"Shotgun - Perseus Skin (Mod)","t":"Weapon Mods"},{"c":"mod_shotgun_skin_leopard","l":"Shotgun - Leopard Skin (Mod)","t":"Weapon Mods"},{"c":"mod_shotgun_skin_zebra","l":"Shotgun - Zebra Skin (Mod)","t":"Weapon Mods"},{"c":"mod_shotgun_skin_geometric","l":"Shotgun - Geometric Skin (Mod)","t":"Weapon Mods"},{"c":"mod_shotgun_skin_boom","l":"Shotgun - Boom Skin (Mod)","t":"Weapon Mods"},{"c":"mod_shotgun_skin_patriotic","l":"Shotgun - Patriotic Skin (Mod)","t":"Weapon Mods"},{"c":"mod_rifle_skin_digital","l":"Rifle - Digital Skin (Mod)","t":"Weapon Mods"},{"c":"mod_rifle_skin_brushstroke","l":"Rifle - Brushstroke Skin (Mod)","t":"Weapon Mods"},{"c":"mod_rifle_skin_woodland","l":"Rifle - Woodland Skin (Mod)","t":"Weapon Mods"},{"c":"mod_rifle_skin_skull","l":"Rifle - Skull Skin (Mod)","t":"Weapon Mods"},{"c":"mod_rifle_skin_sessanta","l":"Rifle - Sessanta Skin (Mod)","t":"Weapon Mods"},{"c":"mod_rifle_skin_perseus","l":"Rifle - Perseus Skin (Mod)","t":"Weapon Mods"},{"c":"mod_rifle_skin_leopard","l":"Rifle - Leopard Skin (Mod)","t":"Weapon Mods"},{"c":"mod_rifle_skin_zebra","l":"Rifle - Zebra Skin (Mod)","t":"Weapon Mods"},{"c":"mod_rifle_skin_geometric","l":"Rifle - Geometric Skin (Mod)","t":"Weapon Mods"},{"c":"mod_rifle_skin_boom","l":"Rifle - Boom Skin (Mod)","t":"Weapon Mods"},{"c":"mod_rifle_skin_patriotic","l":"Rifle - Patriotic Skin (Mod)","t":"Weapon Mods"},{"c":"epsilon_flyer","l":"Epsilon Flyer","t":"Event & Misc"},{"c":"epsilon_flyer_box","l":"Epsilon Flyers (50 Pack)","t":"Event & Misc"},{"c":"cigarette_pack","l":"Redwood Cigarettes (Pack)","t":"Event & Misc"},{"c":"cigarette","l":"Redwood Cigarette","t":"Event & Misc"},{"c":"lighter","l":"Lighter","t":"Event & Misc"},{"c":"cigar","l":"Estancia Cigar","t":"Event & Misc"},{"c":"bandage_hemp","l":"Bandage (Hemp)","t":"Medical"},{"c":"cbd_pills","l":"Painkillers (CBD Infused)","t":"Medical"},{"c":"bottled_water","l":"Bottled Water","t":"Drinks"},{"c":"orange_juice","l":"Orange Juice","t":"Drinks"},{"c":"apple_juice","l":"Apple juice","t":"Food"},{"c":"sprunk_can","l":"Sprunk","t":"Drinks"},{"c":"sprunk_light_can","l":"Sprunk Light","t":"Drinks"},{"c":"sprunk_xtreme_can","l":"Sprunk X-treme","t":"Drinks"},{"c":"sprunk_cherry_can","l":"Sprunk Cherry","t":"Drinks"},{"c":"ecola_can","l":"eCola","t":"Drinks"},{"c":"otang_can","l":"Orang O-Tang","t":"Drinks"},{"c":"milk_carton","l":"Milk","t":"Drinks"},{"c":"sludgie_tropical","l":"Tropical Sludgie","t":"Drinks"},{"c":"lime_sludgie","l":"Lime Sludgie","t":"Drinks"},{"c":"strawberry_sludgie","l":"Strawberry Sludgie","t":"Drinks"},{"c":"junk_can","l":"Junk Energy Drink","t":"Drinks"},{"c":"coffee","l":"Coffee","t":"Drinks"},{"c":"hot_chocolate","l":"Hot Chocolate","t":"Drinks"},{"c":"tea","l":"Tea","t":"Drinks"},{"c":"piswasser_beer","l":"Piswasser","t":"Drinks"},{"c":"logger_beer","l":"Logger","t":"Drinks"},{"c":"loggerlight_beer","l":"Logger Light","t":"Drinks"},{"c":"am_beer","l":"A.M. Beer","t":"Drinks"},{"c":"stronzo_beer","l":"Stronzo","t":"Drinks"},{"c":"benedict_beer","l":"Benedict Light Beer","t":"Drinks"},{"c":"blarneys_beer","l":"Blarneys Stout","t":"Drinks"},{"c":"Bleuterd_champagne","l":"Bleuter Champagne","t":"Drinks"},{"c":"dusche_beer","l":"Dusche Gold","t":"Drinks"},{"c":"jakeys_beer","l":"Jakeys Lager","t":"Drinks"},{"c":"patriot_beer","l":"Patriot Beer","t":"Drinks"},{"c":"cerveza_beer","l":"Cerveza Barracho","t":"Drinks"},{"c":"cherenkov_vodka","l":"Cherenkov Vodka","t":"Drinks"},{"c":"nogo_vodka","l":"Nogo Vodka","t":"Drinks"},{"c":"macbeth_whiskey","l":"Macbeth Scotch Whiskey","t":"Drinks"},{"c":"ragga_rum","l":"Ragga Rum","t":"Drinks"},{"c":"tequilya","l":"Tequilya","t":"Drinks"},{"c":"bourgeoix_cognac","l":"Bourgeoix Cognac","t":"Drinks"},{"c":"mount_whiskey","l":"Mount Bourbon Whiskey","t":"Drinks"},{"c":"rockford_wine","l":"Rockford Hill Reserve - Pinot Noir","t":"Drinks"},{"c":"roosters_wine","l":"Two Roosters - Pinot Noir","t":"Drinks"},{"c":"costa_wine","l":"Costa Del Perro - Cabernet Sauvignon","t":"Drinks"},{"c":"vinewood_wine","l":"Vinewood - Red Zinfadel","t":"Drinks"},{"c":"heartstopper_burger","l":"Heart Stopper Burger","t":"Food"},{"c":"bleedermeal_burger","l":"Bleeder Meal","t":"Food"},{"c":"moneyshot_burger","l":"Money Shot Meal","t":"Food"},{"c":"torpedo_burger","l":"Torpedo Meal","t":"Food"},{"c":"wickedwiener_hotdog","l":"Wicked Wiener","t":"Food"},{"c":"redhotrocket_hotdog","l":"Red Hot Rocket","t":"Food"},{"c":"gutwrecker_hotdog","l":"Gut Wrecker Glizzy","t":"Food"},{"c":"pretzel","l":"Hot Pretzel","t":"Food"},{"c":"cheese_pizza","l":"Cheese Pizza","t":"Food"},{"c":"pepperoni_pizza","l":"Pepperoni Pizza","t":"Food"},{"c":"veggie_pizza","l":"Veggie Pizza","t":"Food"},{"c":"hawaiian_pizza","l":"Hawaiian Pizza","t":"Food"},{"c":"cheese_pizza","l":"Cheese Pizza","t":"Food"},{"c":"regular_burger","l":"Burger","t":"Food"},{"c":"mega_burger","l":"Megacheese","t":"Food"},{"c":"double_burger","l":"Double Burger","t":"Food"},{"c":"king_burger","l":"Kingsize Burger","t":"Food"},{"c":"bacon_burger","l":"Bacon Burger","t":"Food"},{"c":"fries","l":"Fries","t":"Food"},{"c":"sandwich","l":"Sandwich","t":"Food"},{"c":"baguette","l":"Baguette","t":"Food"},{"c":"nuts_bag","l":"Deez Nuts","t":"Food"},{"c":"beef_jerky","l":"Beef Jerky","t":"Food"},{"c":"noodle_cup","l":"Noodle Cup","t":"Food"},{"c":"chicken_bake","l":"Chicken Bake","t":"Food"},{"c":"sausage_roll","l":"Sausage Roll","t":"Food"},{"c":"tuna_can","l":"Canned Tuna","t":"Food"},{"c":"tomato_soup","l":"Tomato Soup","t":"Food"},{"c":"vegatable_soup","l":"Vegetable Soup","t":"Food"},{"c":"dogfood_can","l":"Bitchn Dog Food","t":"Food"},{"c":"phatchips_supersalt","l":"Phat Chips - Supersalt","t":"Food"},{"c":"phatchips_bigcheese","l":"Phat Chips - Big Cheese","t":"Food"},{"c":"phatchips_stickyribs","l":"Phat Chips - Sticky Ribs","t":"Food"},{"c":"phatchips_habanero","l":"Phat Chips - Habanero","t":"Food"},{"c":"meteorite_candy","l":"Meteorite Bar","t":"Food"},{"c":"zebrabar_candy","l":"Zebrabar","t":"Food"},{"c":"earthquake_candy","l":"EarthQuakes","t":"Food"},{"c":"p_and_q_candy","l":"P&Qs","t":"Food"},{"c":"doughnut","l":"Doughnut","t":"Food"},{"c":"apple","l":"Apple","t":"Food"},{"c":"pear","l":"Pear","t":"Food"},{"c":"banana","l":"Banana","t":"Food"},{"c":"pineapple","l":"Pineapple","t":"Food"},{"c":"peach","l":"Peach","t":"Food"},{"c":"mango","l":"Mango","t":"Food"},{"c":"tomato","l":"Tomato","t":"Food"},{"c":"watermelon","l":"Watermelon","t":"Food"},{"c":"paydirt","l":"Paydirt","t":"Mining"},{"c":"mining_drill","l":"Mining Drill","t":"Mining"},{"c":"coal_ore","l":"Coal Ore","t":"Mining"},{"c":"copper_ore","l":"Copper Ore","t":"Mining"},{"c":"iron_ore","l":"Iron Ore","t":"Mining"},{"c":"silver_ore","l":"Silver Ore","t":"Mining"},{"c":"gold_ore","l":"Gold Ore","t":"Mining"},{"c":"uncut_emerald","l":"Uncut Emerald","t":"Mining"},{"c":"uncut_sapphire","l":"Uncut Sapphire","t":"Mining"},{"c":"uncut_ruby","l":"Uncut Ruby","t":"Mining"},{"c":"uncut_diamond_small","l":"Uncut Diamond (Small)","t":"Mining"},{"c":"runite_ore","l":"Runite Ore","t":"Mining"},{"c":"tin_ore","l":"Tin Ore","t":"Mining"},{"c":"rich_paydirt","l":"Rich Paydirt","t":"Mining"},{"c":"bag_0","l":"Bag #1","t":"Loot Containers"},{"c":"bag_1","l":"Bag #2","t":"Loot Containers"},{"c":"camera","l":"DSLR Camera","t":"Event & Misc"},{"c":"still","l":"Moonshine Still","t":"Event & Misc"},{"c":"drugtest_kit","l":"Drug Test Kit","t":"Medical"},{"c":"mutated_tomato","l":"Mutated Tomato","t":"Food"},{"c":"garlic_chips","l":"Garlic n' Chips","t":"Food"},{"c":"magazine_1","l":"SHAGMAG - #01","t":"Event & Misc"},{"c":"magazine_2","l":"SHAGMAG - #02","t":"Event & Misc"},{"c":"scuba_gear","l":"Scuba Gear","t":"Event & Misc"},{"c":"scuba_gear_depleted","l":"Scuba Gear (Depleted)","t":"Event & Misc"},{"c":"phone_broken","l":"Cell Phone (Broken)","t":"Event & Misc"},{"c":"meth_bag_e","l":"Meth Bag (Green)","t":"Drugs"},{"c":"meth_tray_e","l":"Crystal Meth Tray (Green)","t":"Drugs"},{"c":"magazine_3","l":"SHAGMAG - #03","t":"Event & Misc"},{"c":"suitcase","l":"Suitcase","t":"Loot Containers"},{"c":"mystery_box_1","l":"Mystery Box #1","t":"Loot Containers"},{"c":"mystery_box_2","l":"Mystery Box #2","t":"Loot Containers"},{"c":"mystery_box_3","l":"Mystery Box #3","t":"Loot Containers"},{"c":"weapon_ump45","l":"UMP45 (NERF GUN)","t":"Event & Misc"},{"c":"jobfair_1","l":"Job Fair Leaflet","t":"Event & Misc"},{"c":"independence_card","l":"Independence Flyer","t":"Event & Misc"},{"c":"firework","l":"Firework","t":"Event & Misc"},{"c":"roulette_ball","l":"Diamond Encrusted Roulette Ball","t":"Valuables"},{"c":"mop","l":"Mop","t":"Tools"},{"c":"remote_killswitch","l":"Remote Vehicle Killswitch","t":"Event & Misc"},{"c":"lottery_ticket","l":"Lottery Ticket","t":"Event & Misc"},{"c":"scratchcard_1","l":"Scratch Card (Impotent Rage)","t":"Event & Misc"},{"c":"handheld_radio","l":"VHF/UHF Radio","t":"Event & Misc"},{"c":"handheld_radio_broken","l":"VHF/UHF Radio (Broken)","t":"Event & Misc"},{"c":"xmas_present_1","l":"Christmas Present","t":"Loot Containers"},{"c":"starchase_tracker","l":"StarChase Tracker","t":"Event & Misc"},{"c":"weed_trimmings_g13","l":"Weed Trimmings (G13)","t":"Weed"},{"c":"weed_trimmings_g14","l":"Weed Trimmings (ACDC)","t":"Weed"},{"c":"weed_trimmings_g15","l":"Weed Trimmings (AK-47)","t":"Weed"},{"c":"weed_trimmings_g16","l":"Weed Trimmings (Bay 11)","t":"Weed"},{"c":"weed_trimmings_g17","l":"Weed Trimmings (Cheese)","t":"Weed"},{"c":"weed_trimmings_g18","l":"Weed Trimmings (Papaya)","t":"Weed"},{"c":"weed_trimmings_g19","l":"Weed Trimmings (Fire OG)","t":"Weed"},{"c":"weed_trimmings_g20","l":"Weed Trimmings (Wifi OG)","t":"Weed"},{"c":"weed_trimmings_g21","l":"Weed Trimmings (Agent 99)","t":"Weed"},{"c":"weed_trimmings_g22","l":"Weed Trimmings (Red Haze)","t":"Weed"},{"c":"weed_trimmings_g23","l":"Weed Trimmings (MK Ultra)","t":"Weed"},{"c":"weed_trimmings_g24","l":"Weed Trimmings (Diablo OG)","t":"Weed"},{"c":"weed_trimmings_g25","l":"Weed Trimmings (Moon Rock)","t":"Weed"},{"c":"weed_trimmings_g26","l":"Weed Trimmings (Pink Kush)","t":"Weed"},{"c":"weed_trimmings_g27","l":"Weed Trimmings (Candyland)","t":"Weed"},{"c":"weed_trimmings_g28","l":"Weed Trimmings (The White)","t":"Weed"},{"c":"weed_trimmings_g29","l":"Weed Trimmings (Cornbread)","t":"Weed"},{"c":"weed_trimmings_g30","l":"Weed Trimmings (Gods Gift)","t":"Weed"},{"c":"weed_trimmings_g31","l":"Weed Trimmings (Watermelon)","t":"Weed"},{"c":"weed_trimmings_g32","l":"Weed Trimmings (Boggle Gum)","t":"Weed"},{"c":"weed_trimmings_g33","l":"Weed Trimmings (Bubble Gum)","t":"Weed"},{"c":"weed_trimmings_g34","l":"Weed Trimmings (Bubba Kush)","t":"Weed"},{"c":"weed_trimmings_g35","l":"Weed Trimmings (Diamond OG)","t":"Weed"},{"c":"weed_trimmings_g36","l":"Weed Trimmings (Rudeboi OG)","t":"Weed"},{"c":"weed_trimmings_g37","l":"Weed Trimmings (Banana Kush)","t":"Weed"},{"c":"weed_trimmings_g38","l":"Weed Trimmings (Lemon Skunk)","t":"Weed"},{"c":"weed_trimmings_g39","l":"Weed Trimmings (Berry White)","t":"Weed"},{"c":"weed_trimmings_g40","l":"Weed Trimmings (Bubbleberry)","t":"Weed"},{"c":"weed_trimmings_g41","l":"Weed Trimmings (Silver Haze)","t":"Weed"},{"c":"weed_trimmings_g42","l":"Weed Trimmings (Casey Jones)","t":"Weed"},{"c":"weed_trimmings_g43","l":"Weed Trimmings (Black Domina)","t":"Weed"},{"c":"weed_trimmings_g44","l":"Weed Trimmings (Mendo Breath)","t":"Weed"},{"c":"weed_trimmings_g45","l":"Weed Trimmings (Lemon Skunk)","t":"Weed"},{"c":"weed_trimmings_g46","l":"Weed Trimmings (Wonder Woman)","t":"Weed"},{"c":"weed_trimmings_g47","l":"Weed Trimmings (Dutch Dragon)","t":"Weed"},{"c":"weed_trimmings_g48","l":"Weed Trimmings (Bruce Banner)","t":"Weed"},{"c":"weed_trimmings_g49","l":"Weed Trimmings (Afghan Diesel)","t":"Weed"},{"c":"weed_trimmings_g50","l":"Weed Trimmings (Sugar Cookies)","t":"Weed"},{"c":"weed_trimmings_g51","l":"Weed Trimmings (Pineapple Chunk)","t":"Weed"},{"c":"weed_trimmings_g52","l":"Weed Trimmings (Purple Headband)","t":"Weed"},{"c":"weed_trimmings_g53","l":"Weed Trimmings (Grapefruit Haze)","t":"Weed"},{"c":"weed_trimmings_g54","l":"Weed Trimmings (Super Lemon Haze)","t":"Weed"},{"c":"weed_trimmings_g55","l":"Weed Trimmings (Golden Pineapple)","t":"Weed"},{"c":"weed_trimmings_g56","l":"Weed Trimmings (Ghost Train Haze)","t":"Weed"},{"c":"weed_trimmings_g57","l":"Weed Trimmings (Black Cherry Soda)","t":"Weed"},{"c":"weed_trimmings_g58","l":"Weed Trimmings (Island Sweet Skunk)","t":"Weed"},{"c":"weed_trimmings_g59","l":"Weed Trimmings (Grand Daddy Purple)","t":"Weed"},{"c":"weed_trimmings_g60","l":"Weed Trimmings (Ultimate Trainwreck)","t":"Weed"},{"c":"weed_trimmings_g61","l":"Weed Trimmings (White Tahoe Cookies)","t":"Weed"},{"c":"weed_trimmings_g62","l":"Weed Trimmings (Blackberry Trainwreck)","t":"Weed"},{"c":"weed_trimmings_g63","l":"Weed Trimmings (XJ-13)","t":"Weed"},{"c":"weed_trimmings_g64","l":"Weed Trimmings (Mimosa)","t":"Weed"},{"c":"weed_trimmings_g65","l":"Weed Trimmings (Chronic)","t":"Weed"},{"c":"weed_trimmings_g66","l":"Weed Trimmings (True OG)","t":"Weed"},{"c":"weed_trimmings_g67","l":"Weed Trimmings (Trinity)","t":"Weed"},{"c":"weed_trimmings_g68","l":"Weed Trimmings (OG Kush)","t":"Weed"},{"c":"weed_trimmings_g69","l":"Weed Trimmings (Sherbert)","t":"Weed"},{"c":"weed_trimmings_g70","l":"Weed Trimmings (Hells OG)","t":"Weed"},{"c":"weed_trimmings_g71","l":"Weed Trimmings (Canna-Tsu)","t":"Weed"},{"c":"weed_trimmings_g72","l":"Weed Trimmings (Jillybean)","t":"Weed"},{"c":"weed_trimmings_g73","l":"Weed Trimmings (Tora Bora)","t":"Weed"},{"c":"weed_trimmings_g74","l":"Weed Trimmings (Do-Si-Dos)","t":"Weed"},{"c":"weed_trimmings_g75","l":"Weed Trimmings (Sour Kush)","t":"Weed"},{"c":"weed_trimmings_g76","l":"Weed Trimmings (G-13 Haze)","t":"Weed"},{"c":"weed_trimmings_g77","l":"Weed Trimmings (Chocolope)","t":"Weed"},{"c":"weed_trimmings_g78","l":"Weed Trimmings (Skywalker)","t":"Weed"},{"c":"weed_trimmings_g79","l":"Weed Trimmings (LA Cheese)","t":"Weed"},{"c":"weed_trimmings_g80","l":"Weed Trimmings (Cherry OG)","t":"Weed"},{"c":"weed_trimmings_g81","l":"Weed Trimmings (Red Dragon)","t":"Weed"},{"c":"weed_trimmings_g82","l":"Weed Trimmings (Blue Dream)","t":"Weed"},{"c":"weed_trimmings_g83","l":"Weed Trimmings (Mango Kush)","t":"Weed"},{"c":"weed_trimmings_g84","l":"Weed Trimmings (Chernobyl)","t":"Weed"},{"c":"weed_trimmings_g85","l":"Weed Trimmings (Trainwreck)","t":"Weed"},{"c":"weed_trimmings_g86","l":"Weed Trimmings (Early Girl)","t":"Weed"},{"c":"weed_trimmings_g87","l":"Weed Trimmings (Green Cush)","t":"Weed"},{"c":"weed_trimmings_g88","l":"Weed Trimmings (Jack Herer)","t":"Weed"},{"c":"weed_trimmings_g89","l":"Weed Trimmings (Grapefruit)","t":"Weed"},{"c":"weed_trimmings_g90","l":"Weed Trimmings (Death Star)","t":"Weed"},{"c":"weed_trimmings_g91","l":"Weed Trimmings (Sensi Star)","t":"Weed"},{"c":"weed_trimmings_g92","l":"Weed Trimmings (Maui Wowie)","t":"Weed"},{"c":"weed_trimmings_g93","l":"Weed Trimmings (Lemon Haze)","t":"Weed"},{"c":"weed_trimmings_g94","l":"Weed Trimmings (NYC Diesel)","t":"Weed"},{"c":"weed_trimmings_g95","l":"Weed Trimmings (Sour Apple)","t":"Weed"},{"c":"weed_trimmings_g96","l":"Weed Trimmings (501st OG)","t":"Weed"},{"c":"weed_trimmings_g97","l":"Weed Trimmings (Panama Red)","t":"Weed"},{"c":"weed_trimmings_g98","l":"Weed Trimmings (WiFi Mints)","t":"Weed"},{"c":"weed_trimmings_g99","l":"Weed Trimmings (Platinum OG)","t":"Weed"},{"c":"weed_trimmings_g100","l":"Weed Trimmings (Master Kush)","t":"Weed"},{"c":"weed_trimmings_g101","l":"Weed Trimmings (White Widow)","t":"Weed"},{"c":"weed_trimmings_g102","l":"Weed Trimmings (Super Skunk)","t":"Weed"},{"c":"weed_trimmings_g103","l":"Weed Trimmings (Star Killer)","t":"Weed"},{"c":"weed_trimmings_g104","l":"Weed Trimmings (Mango Tango)","t":"Weed"},{"c":"weed_trimmings_g105","l":"Weed Trimmings (Green Crack)","t":"Weed"},{"c":"weed_trimmings_g106","l":"Weed Trimmings (Grand Hindu)","t":"Weed"},{"c":"weed_trimmings_g107","l":"Weed Trimmings (Afghan Kush)","t":"Weed"},{"c":"weed_trimmings_g108","l":"Weed Trimmings (Sour Tangie)","t":"Weed"},{"c":"weed_trimmings_g109","l":"Weed Trimmings (Purple Kush)","t":"Weed"},{"c":"weed_trimmings_g110","l":"Weed Trimmings (Blue Cheese)","t":"Weed"},{"c":"weed_trimmings_g111","l":"Weed Trimmings (Dutch Treat)","t":"Weed"},{"c":"weed_trimmings_g112","l":"Weed Trimmings (White Rhino)","t":"Weed"},{"c":"weed_trimmings_g113","l":"Weed Trimmings (Quantum Kush)","t":"Weed"},{"c":"weed_trimmings_g114","l":"Weed Trimmings (Khalifa Kush)","t":"Weed"},{"c":"weed_trimmings_g115","l":"Weed Trimmings (Jungle Juice)","t":"Weed"},{"c":"weed_trimmings_g116","l":"Weed Trimmings (Banana Split)","t":"Weed"},{"c":"weed_trimmings_g117","l":"Weed Trimmings (Amnesia Haze)","t":"Weed"},{"c":"weed_trimmings_g118","l":"Weed Trimmings (Agent Orange)","t":"Weed"},{"c":"weed_trimmings_g119","l":"Weed Trimmings (Purple Urkle)","t":"Weed"},{"c":"weed_trimmings_g120","l":"Weed Trimmings (Orange Crush)","t":"Weed"},{"c":"weed_trimmings_g121","l":"Weed Trimmings (Purple Punch)","t":"Weed"},{"c":"weed_trimmings_g122","l":"Weed Trimmings (Cinderella 99)","t":"Weed"},{"c":"weed_trimmings_g123","l":"Weed Trimmings (White Fire OG)","t":"Weed"},{"c":"weed_trimmings_g124","l":"Weed Trimmings (Durban Poison)","t":"Weed"},{"c":"weed_trimmings_g125","l":"Weed Trimmings (Critical Kush)","t":"Weed"},{"c":"weed_trimmings_g126","l":"Weed Trimmings (Colombian Gold)","t":"Weed"},{"c":"weed_trimmings_g127","l":"Weed Trimmings (Fire Alien Kush)","t":"Weed"},{"c":"weed_trimmings_g128","l":"Weed Trimmings (Chocolate Chunk)","t":"Weed"},{"c":"weed_trimmings_g129","l":"Weed Trimmings (Blackberry Kush)","t":"Weed"},{"c":"weed_trimmings_g130","l":"Weed Trimmings (LA Confidential)","t":"Weed"},{"c":"weed_trimmings_g131","l":"Weed Trimmings (Island Maui Haze)","t":"Weed"},{"c":"weed_trimmings_g132","l":"Weed Trimmings (Cotton Candy Kush)","t":"Weed"},{"c":"weed_trimmings_g133","l":"Weed Trimmings (Strawberry Banana)","t":"Weed"},{"c":"weed_trimmings_g134","l":"Weed Trimmings (Super Silver Haze)","t":"Weed"},{"c":"weed_trimmings_g135","l":"Weed Trimmings (Cookies and Cream)","t":"Weed"},{"c":"weed_trimmings_g136","l":"Weed Trimmings (Blueberry Headband)","t":"Weed"},{"c":"weed_trimmings_g137","l":"Weed Trimmings (Platinum Girl Scout Cookies)","t":"Weed"},{"c":"weed_trimmings_g138","l":"Weed Trimmings (J1)","t":"Weed"},{"c":"weed_trimmings_g139","l":"Weed Trimmings (Flo)","t":"Weed"},{"c":"weed_trimmings_g140","l":"Weed Trimmings (Cinex)","t":"Weed"},{"c":"weed_trimmings_g141","l":"Weed Trimmings (Blues)","t":"Weed"},{"c":"weed_trimmings_g142","l":"Weed Trimmings (Tangie)","t":"Weed"},{"c":"weed_trimmings_g143","l":"Weed Trimmings (Yoda OG)","t":"Weed"},{"c":"weed_trimmings_g144","l":"Weed Trimmings (Snowcap)","t":"Weed"},{"c":"weed_trimmings_g145","l":"Weed Trimmings (Romulan)","t":"Weed"},{"c":"weed_trimmings_g146","l":"Weed Trimmings (Zkittlez)","t":"Weed"},{"c":"weed_trimmings_g147","l":"Weed Trimmings (El Chapo)","t":"Weed"},{"c":"weed_trimmings_g148","l":"Weed Trimmings (Chemdawg)","t":"Weed"},{"c":"weed_trimmings_g149","l":"Weed Trimmings (Alien OG)","t":"Weed"},{"c":"weed_trimmings_g150","l":"Weed Trimmings (Headband)","t":"Weed"},{"c":"weed_trimmings_g151","l":"Weed Trimmings (Chernobyl)","t":"Weed"},{"c":"weed_trimmings_g152","l":"Weed Trimmings (Jedi Kush)","t":"Weed"},{"c":"weed_trimmings_g153","l":"Weed Trimmings (Harlequin)","t":"Weed"},{"c":"weed_trimmings_g154","l":"Weed Trimmings (Blueberry)","t":"Weed"},{"c":"weed_trimmings_g155","l":"Weed Trimmings (Grape Ape)","t":"Weed"},{"c":"weed_trimmings_g156","l":"Weed Trimmings (Sour Grape)","t":"Weed"},{"c":"weed_trimmings_g157","l":"Weed Trimmings (Kimbo Kush)","t":"Weed"},{"c":"weed_trimmings_g158","l":"Weed Trimmings (Mango Haze)","t":"Weed"},{"c":"weed_trimmings_g159","l":"Weed Trimmings (Hindu Kush)","t":"Weed"},{"c":"weed_trimmings_g160","l":"Weed Trimmings (Chem Wreck)","t":"Weed"},{"c":"weed_trimmings_g161","l":"Weed Trimmings (Lemon Kush)","t":"Weed"},{"c":"weed_trimmings_g162","l":"Weed Trimmings (Uncle Andy)","t":"Weed"},{"c":"weed_trimmings_g163","l":"Weed Trimmings (Cherry Pie)","t":"Weed"},{"c":"weed_trimmings_g164","l":"Weed Trimmings (Kryptonite)","t":"Weed"},{"c":"weed_trimmings_g165","l":"Weed Trimmings (Purple Haze)","t":"Weed"},{"c":"weed_trimmings_g166","l":"Weed Trimmings (Kosher Kush)","t":"Weed"},{"c":"weed_trimmings_g167","l":"Weed Trimmings (Tahoe Alien)","t":"Weed"},{"c":"weed_trimmings_g168","l":"Weed Trimmings (Cherry Bomb)","t":"Weed"},{"c":"weed_trimmings_g169","l":"Weed Trimmings (Sweet Tooth)","t":"Weed"},{"c":"weed_trimmings_g170","l":"Weed Trimmings (Shark Shock)","t":"Weed"},{"c":"weed_trimmings_g171","l":"Weed Trimmings (Golden Goat)","t":"Weed"},{"c":"weed_trimmings_g172","l":"Weed Trimmings (Blue Diesel)","t":"Weed"},{"c":"weed_trimmings_g173","l":"Weed Trimmings (Sour Diesel)","t":"Weed"},{"c":"weed_trimmings_g174","l":"Weed Trimmings (Sage N Sour)","t":"Weed"},{"c":"weed_trimmings_g175","l":"Weed Trimmings (Death Bubba)","t":"Weed"},{"c":"weed_trimmings_g176","l":"Weed Trimmings (Lambs Bread)","t":"Weed"},{"c":"weed_trimmings_g177","l":"Weed Trimmings (Vanilla Kush)","t":"Weed"},{"c":"weed_trimmings_g178","l":"Weed Trimmings (Cotton Candy)","t":"Weed"},{"c":"weed_trimmings_g179","l":"Weed Trimmings (Gorilla Glue)","t":"Weed"},{"c":"weed_trimmings_g180","l":"Weed Trimmings (Pink Cookies)","t":"Weed"},{"c":"weed_trimmings_g181","l":"Weed Trimmings (Lucky Charms)","t":"Weed"},{"c":"weed_trimmings_g182","l":"Weed Trimmings (Skywalker OG)","t":"Weed"},{"c":"weed_trimmings_g183","l":"Weed Trimmings (Wedding Cake)","t":"Weed"},{"c":"weed_trimmings_g184","l":"Weed Trimmings (Cherry AK-47)","t":"Weed"},{"c":"weed_trimmings_g185","l":"Weed Trimmings (Dr. Grinspoon)","t":"Weed"},{"c":"weed_trimmings_g186","l":"Weed Trimmings (Black Diamond)","t":"Weed"},{"c":"weed_trimmings_g187","l":"Weed Trimmings (Hawaiian Snow)","t":"Weed"},{"c":"weed_trimmings_g188","l":"Weed Trimmings (Violator Kush)","t":"Weed"},{"c":"weed_trimmings_g189","l":"Weed Trimmings (Pink Lemonade)","t":"Weed"},{"c":"weed_trimmings_g190","l":"Weed Trimmings (Purple Diesel)","t":"Weed"},{"c":"weed_trimmings_g191","l":"Weed Trimmings (Tahoe OG Kush)","t":"Weed"},{"c":"weed_trimmings_g192","l":"Weed Trimmings (Love Potion #1)","t":"Weed"},{"c":"weed_trimmings_g193","l":"Weed Trimmings (Orange Cookies)","t":"Weed"},{"c":"weed_trimmings_g194","l":"Weed Trimmings (Chocolate Thai)","t":"Weed"},{"c":"weed_trimmings_g195","l":"Weed Trimmings (Lemon Meringue)","t":"Weed"},{"c":"weed_trimmings_g196","l":"Weed Trimmings (Charlottes Web)","t":"Weed"},{"c":"weed_trimmings_g197","l":"Weed Trimmings (Wedding Crasher)","t":"Weed"},{"c":"weed_trimmings_g198","l":"Weed Trimmings (Northern Lights)","t":"Weed"},{"c":"weed_trimmings_g199","l":"Weed Trimmings (Forbidden Fruit)","t":"Weed"},{"c":"weed_trimmings_g200","l":"Weed Trimmings (Trainwreck Haze)","t":"Weed"},{"c":"weed_trimmings_g201","l":"Weed Trimmings (King Louis XIII)","t":"Weed"},{"c":"weed_trimmings_g202","l":"Weed Trimmings (Strawberry Cough)","t":"Weed"},{"c":"weed_trimmings_g203","l":"Weed Trimmings (Vanilla Frosting)","t":"Weed"},{"c":"weed_trimmings_g204","l":"Weed Trimmings (9 Pound Hammer)","t":"Weed"},{"c":"weed_trimmings_g205","l":"Weed Trimmings (Blueberry Diesel)","t":"Weed"},{"c":"weed_trimmings_g206","l":"Weed Trimmings (Strawberry Diesel)","t":"Weed"},{"c":"weed_trimmings_g207","l":"Weed Trimmings (Lemon Sour Diesel)","t":"Weed"},{"c":"weed_trimmings_g208","l":"Weed Trimmings (Heavy Duty Fruity)","t":"Weed"},{"c":"weed_trimmings_g209","l":"Weed Trimmings (Pineapple Express)","t":"Weed"},{"c":"weed_trimmings_g210","l":"Weed Trimmings (Super Sour Diesel)","t":"Weed"},{"c":"weed_trimmings_g211","l":"Weed Trimmings (Girl Scout Cookies)","t":"Weed"},{"c":"weed_trimmings_g212","l":"Weed Trimmings (Alaskan Thunderfuck)","t":"Weed"},{"c":"weed_trimmings_g213","l":"Weed (Bag - J1)","t":"Weed"},{"c":"weed_trimmings_g214","l":"Weed (Bag - G13)","t":"Weed"},{"c":"weed_trimmings_g215","l":"Weed (Bag - Flo)","t":"Weed"},{"c":"weed_trimmings_g216","l":"Weed (Bag - ACDC)","t":"Weed"},{"c":"weed_trimmings_g217","l":"Weed (Bag - AK-47)","t":"Weed"},{"c":"weed_trimmings_g218","l":"Weed (Bag - XJ-13)","t":"Weed"},{"c":"weed_trimmings_g219","l":"Weed (Bag - Cinex)","t":"Weed"},{"c":"weed_trimmings_g220","l":"Weed (Bag - Blues)","t":"Weed"},{"c":"weed_trimmings_g221","l":"Weed (Bag - Bay 11)","t":"Weed"},{"c":"weed_trimmings_g222","l":"Weed (Bag - Cheese)","t":"Weed"},{"c":"weed_trimmings_g223","l":"Weed (Bag - Papaya)","t":"Weed"},{"c":"weed_trimmings_g224","l":"Weed (Bag - Mimosa)","t":"Weed"},{"c":"weed_trimmings_g225","l":"Weed (Bag - Tangie)","t":"Weed"},{"c":"weed_trimmings_g226","l":"Weed (Bag - Fire OG)","t":"Weed"},{"c":"weed_bag_wifi_og","l":"Weed (Bag - Wifi OG)","t":"Weed"},{"c":"weed_bag_chronic","l":"Weed (Bag - Chronic)","t":"Weed"},{"c":"weed_bag_true_og","l":"Weed (Bag - True OG)","t":"Weed"},{"c":"weed_bag_trinity","l":"Weed (Bag - Trinity)","t":"Weed"},{"c":"weed_bag_og_kush","l":"Weed (Bag - OG Kush)","t":"Weed"},{"c":"weed_bag_yoda_og","l":"Weed (Bag - Yoda OG)","t":"Weed"},{"c":"weed_bag_snowcap","l":"Weed (Bag - Snowcap)","t":"Weed"},{"c":"weed_bag_romulan","l":"Weed (Bag - Romulan)","t":"Weed"},{"c":"weed_bag_agent_99","l":"Weed (Bag - Agent 99)","t":"Weed"},{"c":"weed_bag_red_haze","l":"Weed (Bag - Red Haze)","t":"Weed"},{"c":"weed_bag_mk_ultra","l":"Weed (Bag - MK Ultra)","t":"Weed"},{"c":"weed_bag_sherbert","l":"Weed (Bag - Sherbert)","t":"Weed"},{"c":"weed_bag_501st_og","l":"Weed (Bag - 501st OG)","t":"Weed"},{"c":"weed_bag_zkittlez","l":"Weed (Bag - Zkittlez)","t":"Weed"},{"c":"weed_bag_el_chapo","l":"Weed (Bag - El Chapo)","t":"Weed"},{"c":"weed_bag_chemdawg","l":"Weed (Bag - Chemdawg)","t":"Weed"},{"c":"weed_bag_alien_og","l":"Weed (Bag - Alien OG)","t":"Weed"},{"c":"weed_bag_headband","l":"Weed (Bag - Headband)","t":"Weed"},{"c":"weed_bag_hells_og","l":"Weed (Bag - Hell's OG)","t":"Weed"},{"c":"weed_bag_diablo_og","l":"Weed (Bag - Diablo OG)","t":"Weed"},{"c":"weed_bag_moon_rock","l":"Weed (Bag - Moon Rock)","t":"Weed"},{"c":"weed_bag_pink_kush","l":"Weed (Bag - Pink Kush)","t":"Weed"},{"c":"weed_bag_candyland","l":"Weed (Bag - Candyland)","t":"Weed"},{"c":"weed_bag_the_white","l":"Weed (Bag - The White)","t":"Weed"},{"c":"weed_bag_cornbread","l":"Weed (Bag - Cornbread)","t":"Weed"},{"c":"weed_bag_canna_tsu","l":"Weed (Bag - Canna-Tsu)","t":"Weed"},{"c":"weed_bag_jillybean","l":"Weed (Bag - Jillybean)","t":"Weed"},{"c":"weed_bag_tora_bora","l":"Weed (Bag - Tora Bora)","t":"Weed"},{"c":"weed_bag_do_si_dos","l":"Weed (Bag - Do-Si-Dos)","t":"Weed"},{"c":"weed_bag_sour_kush","l":"Weed (Bag - Sour Kush)","t":"Weed"},{"c":"weed_bag_g_13_haze","l":"Weed (Bag - G-13 Haze)","t":"Weed"},{"c":"weed_bag_chocolope","l":"Weed (Bag - Chocolope)","t":"Weed"},{"c":"weed_bag_skywalker","l":"Weed (Bag - Skywalker)","t":"Weed"},{"c":"weed_bag_la_cheese","l":"Weed (Bag - LA Cheese)","t":"Weed"},{"c":"weed_bag_cherry_og","l":"Weed (Bag - Cherry OG)","t":"Weed"},{"c":"weed_bag_chernobyl","l":"Weed (Bag - Chernobyl)","t":"Weed"},{"c":"weed_bag_jedi_kush","l":"Weed (Bag - Jedi Kush)","t":"Weed"},{"c":"weed_bag_harlequin","l":"Weed (Bag - Harlequin)","t":"Weed"},{"c":"weed_bag_blueberry","l":"Weed (Bag - Blueberry)","t":"Weed"},{"c":"weed_bag_grape_ape","l":"Weed (Bag - Grape Ape)","t":"Weed"},{"c":"weed_bag_gods_gift","l":"Weed (Bag - God's Gift)","t":"Weed"},{"c":"weed_bag_watermelon","l":"Weed (Bag - Watermelon)","t":"Weed"},{"c":"weed_bag_boggle_gum","l":"Weed (Bag - Boggle Gum)","t":"Weed"},{"c":"weed_bag_bubble_gum","l":"Weed (Bag - Bubble Gum)","t":"Weed"},{"c":"weed_bag_bubba_kush","l":"Weed (Bag - Bubba Kush)","t":"Weed"},{"c":"weed_bag_diamond_og","l":"Weed (Bag - Diamond OG)","t":"Weed"},{"c":"weed_bag_rudeboi_og","l":"Weed (Bag - Rudeboi OG)","t":"Weed"},{"c":"weed_bag_red_dragon","l":"Weed (Bag - Red Dragon)","t":"Weed"},{"c":"weed_bag_blue_dream","l":"Weed (Bag - Blue Dream)","t":"Weed"},{"c":"weed_bag_mango_kush","l":"Weed (Bag - Mango Kush)","t":"Weed"},{"c":"weed_bag_chernobyl_2","l":"Weed (Bag - Chernobyl)","t":"Weed"},{"c":"weed_bag_trainwreck","l":"Weed (Bag - Trainwreck)","t":"Weed"},{"c":"weed_bag_early_girl","l":"Weed (Bag - Early Girl)","t":"Weed"},{"c":"weed_bag_green_cush","l":"Weed (Bag - Green Cush)","t":"Weed"},{"c":"weed_bag_jack_herer","l":"Weed (Bag - Jack Herer)","t":"Weed"},{"c":"weed_bag_grapefruit","l":"Weed (Bag - Grapefruit)","t":"Weed"},{"c":"weed_bag_death_star","l":"Weed (Bag - Death Star)","t":"Weed"},{"c":"weed_bag_sensi_star","l":"Weed (Bag - Sensi Star)","t":"Weed"},{"c":"weed_bag_maui_wowie","l":"Weed (Bag - Maui Wowie)","t":"Weed"},{"c":"weed_bag_lemon_haze","l":"Weed (Bag - Lemon Haze)","t":"Weed"},{"c":"weed_bag_nyc_diesel","l":"Weed (Bag - NYC Diesel)","t":"Weed"},{"c":"weed_bag_sour_apple","l":"Weed (Bag - Sour Apple)","t":"Weed"},{"c":"weed_bag_panama_red","l":"Weed (Bag - Panama Red)","t":"Weed"},{"c":"weed_bag_wifi_mints","l":"Weed (Bag - WiFi Mints)","t":"Weed"},{"c":"weed_bag_sour_grape","l":"Weed (Bag - Sour Grape)","t":"Weed"},{"c":"weed_bag_kimbo_kush","l":"Weed (Bag - Kimbo Kush)","t":"Weed"},{"c":"weed_bag_mango_haze","l":"Weed (Bag - Mango Haze)","t":"Weed"},{"c":"weed_bag_hindu_kush","l":"Weed (Bag - Hindu Kush)","t":"Weed"},{"c":"weed_bag_chem_wreck","l":"Weed (Bag - Chem Wreck)","t":"Weed"},{"c":"weed_bag_lemon_kush","l":"Weed (Bag - Lemon Kush)","t":"Weed"},{"c":"weed_bag_uncle_andy","l":"Weed (Bag - Uncle Andy)","t":"Weed"},{"c":"weed_bag_cherry_pie","l":"Weed (Bag - Cherry Pie)","t":"Weed"},{"c":"weed_bag_kryptonite","l":"Weed (Bag - Kryptonite)","t":"Weed"},{"c":"weed_bag_banana_kush","l":"Weed (Bag - Banana Kush)","t":"Weed"},{"c":"weed_bag_lemon_skunk","l":"Weed (Bag - Lemon Skunk)","t":"Weed"},{"c":"weed_bag_berry_white","l":"Weed (Bag - Berry White)","t":"Weed"},{"c":"weed_bag_bubbleberry","l":"Weed (Bag - Bubbleberry)","t":"Weed"},{"c":"weed_bag_silver_haze","l":"Weed (Bag - Silver Haze)","t":"Weed"},{"c":"weed_bag_casey_jones","l":"Weed (Bag - Casey Jones)","t":"Weed"},{"c":"weed_bag_platinum_og","l":"Weed (Bag - Platinum OG)","t":"Weed"},{"c":"weed_bag_master_kush","l":"Weed (Bag - Master Kush)","t":"Weed"},{"c":"weed_bag_white_widow","l":"Weed (Bag - White Widow)","t":"Weed"},{"c":"weed_bag_super_skunk","l":"Weed (Bag - Super Skunk)","t":"Weed"},{"c":"weed_bag_star_killer","l":"Weed (Bag - Star Killer)","t":"Weed"},{"c":"weed_bag_mango_tango","l":"Weed (Bag - Mango Tango)","t":"Weed"},{"c":"weed_bag_green_crack","l":"Weed (Bag - Green Crack)","t":"Weed"},{"c":"weed_bag_grand_hindu","l":"Weed (Bag - Grand Hindu)","t":"Weed"},{"c":"weed_bag_afghan_kush","l":"Weed (Bag - Afghan Kush)","t":"Weed"},{"c":"weed_bag_sour_tangie","l":"Weed (Bag - Sour Tangie)","t":"Weed"},{"c":"weed_bag_purple_kush","l":"Weed (Bag - Purple Kush)","t":"Weed"},{"c":"weed_bag_blue_cheese","l":"Weed (Bag - Blue Cheese)","t":"Weed"},{"c":"weed_bag_dutch_treat","l":"Weed (Bag - Dutch Treat)","t":"Weed"},{"c":"weed_bag_white_rhino","l":"Weed (Bag - White Rhino)","t":"Weed"},{"c":"weed_bag_purple_haze","l":"Weed (Bag - Purple Haze)","t":"Weed"},{"c":"weed_bag_kosher_kush","l":"Weed (Bag - Kosher Kush)","t":"Weed"},{"c":"weed_bag_tahoe_alien","l":"Weed (Bag - Tahoe Alien)","t":"Weed"},{"c":"weed_bag_cherry_bomb","l":"Weed (Bag - Cherry Bomb)","t":"Weed"},{"c":"weed_bag_sweet_tooth","l":"Weed (Bag - Sweet Tooth)","t":"Weed"},{"c":"weed_bag_shark_shock","l":"Weed (Bag - Shark Shock)","t":"Weed"},{"c":"weed_bag_golden_goat","l":"Weed (Bag - Golden Goat)","t":"Weed"},{"c":"weed_bag_blue_diesel","l":"Weed (Bag - Blue Diesel)","t":"Weed"},{"c":"weed_bag_sour_diesel","l":"Weed (Bag - Sour Diesel)","t":"Weed"},{"c":"weed_bag_sage_n_sour","l":"Weed (Bag - Sage N Sour)","t":"Weed"},{"c":"weed_bag_death_bubba","l":"Weed (Bag - Death Bubba)","t":"Weed"},{"c":"weed_bag_lambs_bread","l":"Weed (Bag - Lamb's Bread)","t":"Weed"},{"c":"weed_bag_black_domina","l":"Weed (Bag - Black Domina)","t":"Weed"},{"c":"weed_bag_mendo_breath","l":"Weed (Bag - Mendo Breath)","t":"Weed"},{"c":"weed_bag_lemon_skunk_2","l":"Weed (Bag - Lemon Skunk)","t":"Weed"},{"c":"weed_bag_wonder_woman","l":"Weed (Bag - Wonder Woman)","t":"Weed"},{"c":"weed_bag_dutch_dragon","l":"Weed (Bag - Dutch Dragon)","t":"Weed"},{"c":"weed_bag_bruce_banner","l":"Weed (Bag - Bruce Banner)","t":"Weed"},{"c":"weed_bag_quantum_kush","l":"Weed (Bag - Quantum Kush)","t":"Weed"},{"c":"weed_bag_khalifa_kush","l":"Weed (Bag - Khalifa Kush)","t":"Weed"},{"c":"weed_bag_jungle_juice","l":"Weed (Bag - Jungle Juice)","t":"Weed"},{"c":"weed_bag_banana_split","l":"Weed (Bag - Banana Split)","t":"Weed"},{"c":"weed_bag_amnesia_haze","l":"Weed (Bag - Amnesia Haze)","t":"Weed"},{"c":"weed_bag_agent_orange","l":"Weed (Bag - Agent Orange)","t":"Weed"},{"c":"weed_bag_purple_urkle","l":"Weed (Bag - Purple Urkle)","t":"Weed"},{"c":"weed_bag_orange_crush","l":"Weed (Bag - Orange Crush)","t":"Weed"},{"c":"weed_bag_purple_punch","l":"Weed (Bag - Purple Punch)","t":"Weed"},{"c":"weed_bag_vanilla_kush","l":"Weed (Bag - Vanilla Kush)","t":"Weed"},{"c":"weed_bag_cotton_candy","l":"Weed (Bag - Cotton Candy)","t":"Weed"},{"c":"weed_bag_gorilla_glue","l":"Weed (Bag - Gorilla Glue)","t":"Weed"},{"c":"weed_bag_pink_cookies","l":"Weed (Bag - Pink Cookies)","t":"Weed"},{"c":"weed_bag_lucky_charms","l":"Weed (Bag - Lucky Charms)","t":"Weed"},{"c":"weed_bag_skywalker_og","l":"Weed (Bag - Skywalker OG)","t":"Weed"},{"c":"weed_bag_wedding_cake","l":"Weed (Bag - Wedding Cake)","t":"Weed"},{"c":"weed_bag_cherry_ak_47","l":"Weed (Bag - Cherry AK-47)","t":"Weed"},{"c":"weed_bag_dr_grinspoon","l":"Weed (Bag - Dr. Grinspoon)","t":"Weed"},{"c":"weed_bag_afghan_diesel","l":"Weed (Bag - Afghan Diesel)","t":"Weed"},{"c":"weed_bag_sugar_cookies","l":"Weed (Bag - Sugar Cookies)","t":"Weed"},{"c":"weed_bag_cinderella_99","l":"Weed (Bag - Cinderella 99)","t":"Weed"},{"c":"weed_bag_white_fire_og","l":"Weed (Bag - White Fire OG)","t":"Weed"},{"c":"weed_bag_durban_poison","l":"Weed (Bag - Durban Poison)","t":"Weed"},{"c":"weed_bag_critical_kush","l":"Weed (Bag - Critical Kush)","t":"Weed"},{"c":"weed_bag_black_diamond","l":"Weed (Bag - Black Diamond)","t":"Weed"},{"c":"weed_bag_hawaiian_snow","l":"Weed (Bag - Hawaiian Snow)","t":"Weed"},{"c":"weed_bag_violator_kush","l":"Weed (Bag - Violator Kush)","t":"Weed"},{"c":"weed_bag_pink_lemonade","l":"Weed (Bag - Pink Lemonade)","t":"Weed"},{"c":"weed_bag_purple_diesel","l":"Weed (Bag - Purple Diesel)","t":"Weed"},{"c":"weed_bag_tahoe_og_kush","l":"Weed (Bag - Tahoe OG Kush)","t":"Weed"},{"c":"weed_bag_love_potion_1","l":"Weed (Bag - Love Potion #1)","t":"Weed"},{"c":"weed_bag_colombian_gold","l":"Weed (Bag - Colombian Gold)","t":"Weed"},{"c":"weed_bag_orange_cookies","l":"Weed (Bag - Orange Cookies)","t":"Weed"},{"c":"weed_bag_chocolate_thai","l":"Weed (Bag - Chocolate Thai)","t":"Weed"},{"c":"weed_bag_lemon_meringue","l":"Weed (Bag - Lemon Meringue)","t":"Weed"},{"c":"weed_bag_9_pound_hammer","l":"Weed (Bag - 9 Pound Hammer)","t":"Weed"},{"c":"weed_bag_charlottes_web","l":"Weed (Bag - Charlotte's Web)","t":"Weed"},{"c":"weed_bag_pineapple_chunk","l":"Weed (Bag - Pineapple Chunk)","t":"Weed"},{"c":"weed_bag_purple_headband","l":"Weed (Bag - Purple Headband)","t":"Weed"},{"c":"weed_bag_grapefruit_haze","l":"Weed (Bag - Grapefruit Haze)","t":"Weed"},{"c":"weed_bag_fire_alien_kush","l":"Weed (Bag - Fire Alien Kush)","t":"Weed"},{"c":"weed_bag_chocolate_chunk","l":"Weed (Bag - Chocolate Chunk)","t":"Weed"},{"c":"weed_bag_blackberry_kush","l":"Weed (Bag - Blackberry Kush)","t":"Weed"},{"c":"weed_bag_la_confidential","l":"Weed (Bag - LA Confidential)","t":"Weed"},{"c":"weed_bag_wedding_crasher","l":"Weed (Bag - Wedding Crasher)","t":"Weed"},{"c":"weed_bag_northern_lights","l":"Weed (Bag - Northern Lights)","t":"Weed"},{"c":"weed_bag_forbidden_fruit","l":"Weed (Bag - Forbidden Fruit)","t":"Weed"},{"c":"weed_bag_trainwreck_haze","l":"Weed (Bag - Trainwreck Haze)","t":"Weed"},{"c":"weed_bag_king_louis_xiii","l":"Weed (Bag - King Louis XIII)","t":"Weed"},{"c":"weed_bag_super_lemon_haze","l":"Weed (Bag - Super Lemon Haze)","t":"Weed"},{"c":"weed_bag_golden_pineapple","l":"Weed (Bag - Golden Pineapple)","t":"Weed"},{"c":"weed_bag_ghost_train_haze","l":"Weed (Bag - Ghost Train Haze)","t":"Weed"},{"c":"weed_bag_island_maui_haze","l":"Weed (Bag - Island Maui Haze)","t":"Weed"},{"c":"weed_bag_strawberry_cough","l":"Weed (Bag - Strawberry Cough)","t":"Weed"},{"c":"weed_bag_vanilla_frosting","l":"Weed (Bag - Vanilla Frosting)","t":"Weed"},{"c":"weed_bag_blueberry_diesel","l":"Weed (Bag - Blueberry Diesel)","t":"Weed"},{"c":"weed_bag_black_cherry_soda","l":"Weed (Bag - Black Cherry Soda)","t":"Weed"},{"c":"weed_bag_cotton_candy_kush","l":"Weed (Bag - Cotton Candy Kush)","t":"Weed"},{"c":"weed_bag_strawberry_banana","l":"Weed (Bag - Strawberry Banana)","t":"Weed"},{"c":"weed_bag_super_silver_haze","l":"Weed (Bag - Super Silver Haze)","t":"Weed"},{"c":"weed_bag_cookies_and_cream","l":"Weed (Bag - Cookies and Cream)","t":"Weed"},{"c":"weed_bag_strawberry_diesel","l":"Weed (Bag - Strawberry Diesel)","t":"Weed"},{"c":"weed_bag_lemon_sour_diesel","l":"Weed (Bag - Lemon Sour Diesel)","t":"Weed"},{"c":"weed_bag_heavy_duty_fruity","l":"Weed (Bag - Heavy Duty Fruity)","t":"Weed"},{"c":"weed_bag_pineapple_express","l":"Weed (Bag - Pineapple Express)","t":"Weed"},{"c":"weed_bag_super_sour_diesel","l":"Weed (Bag - Super Sour Diesel)","t":"Weed"},{"c":"weed_bag_island_sweet_skunk","l":"Weed (Bag - Island Sweet Skunk)","t":"Weed"},{"c":"weed_bag_grand_daddy_purple","l":"Weed (Bag - Grand Daddy Purple)","t":"Weed"},{"c":"weed_bag_blueberry_headband","l":"Weed (Bag - Blueberry Headband)","t":"Weed"},{"c":"weed_bag_girl_scout_cookies","l":"Weed (Bag - Girl Scout Cookies)","t":"Weed"},{"c":"weed_bag_ultimate_trainwreck","l":"Weed (Bag - Ultimate Trainwreck)","t":"Weed"},{"c":"weed_bag_white_tahoe_cookies","l":"Weed (Bag - White Tahoe Cookies)","t":"Weed"},{"c":"weed_bag_alaskan_thunderfuck","l":"Weed (Bag - Alaskan Thunderfuck)","t":"Weed"},{"c":"weed_bag_blackberry_trainwreck","l":"Weed (Bag - Blackberry Trainwreck)","t":"Weed"},{"c":"weed_bag_platinum_girl_scout_cookies","l":"Weed (Bag - Platinum Girl Scout Cookies)","t":"Weed"},{"c":"weed_seed","l":"Weed (Seed)","t":"Weed"},{"c":"watering_can_0","l":"Watering Can (empty)","t":"Weed"},{"c":"watering_can_1","l":"Watering Can (1)","t":"Weed"},{"c":"watering_can_2","l":"Watering Can (2)","t":"Weed"},{"c":"watering_can_3","l":"Watering Can (3)","t":"Weed"},{"c":"watering_can_4","l":"Watering Can (4)","t":"Weed"},{"c":"watering_can_5","l":"Watering Can (5)","t":"Weed"},{"c":"watering_can_6","l":"Watering Can (6)","t":"Weed"},{"c":"watering_can_7","l":"Watering Can (7)","t":"Weed"},{"c":"watering_can_8","l":"Watering Can (8)","t":"Weed"},{"c":"watering_can_9","l":"Watering Can (9)","t":"Weed"},{"c":"watering_can_10","l":"Watering Can (10)","t":"Weed"},{"c":"plant_feed_0","l":"Miracle Grow (empty)","t":"Weed"},{"c":"plant_feed_1","l":"Miracle Grow (1)","t":"Weed"},{"c":"plant_feed_2","l":"Miracle Grow (2)","t":"Weed"},{"c":"plant_feed_3","l":"Miracle Grow (3)","t":"Weed"},{"c":"plant_feed_4","l":"Miracle Grow (4)","t":"Weed"},{"c":"plant_feed_5","l":"Miracle Grow (5)","t":"Weed"},{"c":"plant_feed_6","l":"Miracle Grow (6)","t":"Weed"},{"c":"plant_feed_7","l":"Miracle Grow (7)","t":"Weed"},{"c":"plant_feed_8","l":"Miracle Grow (8)","t":"Weed"},{"c":"plant_feed_9","l":"Miracle Grow (9)","t":"Weed"},{"c":"plant_feed_10","l":"Miracle Grow (10)","t":"Weed"},{"c":"plant_pot","l":"Plant Pot","t":"Weed"},{"c":"weed_bag_pops_pot","l":"Weed (Bag - Pops Pot)","t":"Weed"},{"c":"weed_trimmings_pops_pot","l":"Weed Trimmings (Pops Pot)","t":"Weed"},{"c":"volt_meter","l":"Voltmeter","t":"Tools"},{"c":"volt_regulator","l":"Voltage Regulator","t":"Tools"},{"c":"wallet","l":"Leather Wallet","t":"Loot Containers"},{"c":"designer_top","l":"Designer Top","t":"Valuables"},{"c":"designer_pants","l":"Designer Pants","t":"Valuables"},{"c":"designer_shoes","l":"Designer Shoes","t":"Valuables"},{"c":"comic_book_1","l":"Damaged Comic 1st edition","t":"Valuables"},{"c":"comic_book_mint_1","l":"1st edition Comic","t":"Valuables"},{"c":"comic_book_2","l":"Damaged comic 2nd Edition","t":"Valuables"},{"c":"comic_book_mint_2","l":"2nd Edition Comic","t":"Valuables"},{"c":"comic_book_3","l":"Damaged comic 3rd edition","t":"Valuables"},{"c":"comic_book_mint_3","l":"3rd edition comic","t":"Valuables"},{"c":"comic_book_4","l":"Damaged comic 4th edition","t":"Valuables"},{"c":"comic_book_mint_4","l":"4th edition comic","t":"Valuables"},{"c":"comic_book_5","l":"Damaged comic 5th edition","t":"Valuables"},{"c":"comic_book_mint_5","l":"5th edition comic","t":"Valuables"},{"c":"comic_book_6","l":"Damaged comic 6th edition","t":"Valuables"},{"c":"comic_book_mint_6","l":"6th edition comic","t":"Valuables"},{"c":"comic_book_7","l":"Damaged comic 7th edition","t":"Valuables"},{"c":"comic_book_mint_7","l":"7th edition comic","t":"Valuables"},{"c":"comic_book_8","l":"Damaged edition 8 comic","t":"Valuables"},{"c":"comic_book_mint_8","l":"8th edition comic","t":"Valuables"},{"c":"ornament_1","l":"Ornament (Small)","t":"Valuables"},{"c":"ornament_2","l":"Ornament (Large)","t":"Valuables"},{"c":"baseball_cards_signed","l":"Signed Baseball Card","t":"Valuables"},{"c":"baseball_cards","l":"Baseball Card","t":"Valuables"},{"c":"suitcase_cash","l":"Designer Suitcase","t":"Valuables"},{"c":"signed_baseball","l":"Signed Baseball","t":"Valuables"},{"c":"money_sock","l":"Stuffed Sock","t":"Loot Containers"},{"c":"blueprint_weed_1","l":"Blueprints (Weed Lockup)","t":"Blueprints"},{"c":"designer_glasses","l":"Designer Glasses","t":"Valuables"},{"c":"wedding_ring","l":"Wedding Ring","t":"Valuables"},{"c":"race_token","l":"Race Token","t":"Event & Misc"},{"c":"firework_planner","l":"Firework (Show Set)","t":"Event & Misc"},{"c":"birds_nest","l":"Bird's Nest","t":"Lumber"},{"c":"fir_log","l":"Fir Log","t":"Lumber"},{"c":"fir_plank","l":"Fir Plank","t":"Lumber"},{"c":"oak_log","l":"Oak Log","t":"Lumber"},{"c":"oak_plank","l":"Oak Plank","t":"Lumber"},{"c":"teak_log","l":"Teak Log","t":"Lumber"},{"c":"teak_plank","l":"Teak Plank","t":"Lumber"},{"c":"pine_log","l":"Pine Log","t":"Lumber"},{"c":"pine_plank","l":"Pine Plank","t":"Lumber"},{"c":"maple_log","l":"Maple Log","t":"Lumber"},{"c":"maple_plank","l":"Maple Plank","t":"Lumber"},{"c":"redwood_log","l":"Redwood Log","t":"Lumber"},{"c":"redwood_plank","l":"Redwood Plank","t":"Lumber"},{"c":"cedar_log","l":"Cedar Log","t":"Lumber"},{"c":"cedar_plank","l":"Cedar Plank","t":"Lumber"},{"c":"gold_bar_oz","l":"Gold Bar (1oz)","t":"Mining"},{"c":"silver_bar_oz","l":"Silver Bar (1oz)","t":"Mining"},{"c":"copper_bar_oz","l":"Copper Bar (1oz)","t":"Mining"},{"c":"brass_bar_oz","l":"Brass Bar (1oz)","t":"Mining"},{"c":"zinc_bar_oz","l":"Zinc Bar (1oz)","t":"Mining"},{"c":"zinc_ore","l":"Zinc Ore","t":"Mining"},{"c":"smg_shell_casing_empty","l":"Empty Shell Casing (SMG)","t":"Weapon Parts"},{"c":"blueprint_weapon_m16a4","l":"Blueprint (M16A4)","t":"Blueprints"},{"c":"blueprint_weapon_m16a4","l":"Blueprint (M16A4)","t":"Blueprints"},{"c":"blueprint_weapon_m16a2","l":"Blueprint (M16A2)","t":"Blueprints"},{"c":"blueprint_weapon_assaultrifle","l":"Blueprint (Assault Rifle)","t":"Blueprints"},{"c":"blueprint_weapon_carbinerifle","l":"Blueprint (Carbine Rifle)","t":"Blueprints"},{"c":"blueprint_weapon_specialcarbine","l":"Blueprint (Special Carbine)","t":"Blueprints"},{"c":"blueprint_weapon_compactrifle","l":"Blueprint (Compact Rifle)","t":"Blueprints"},{"c":"blueprint_weapon_assaultrifle_mk2","l":"Blueprint (Assault Rifle MK2)","t":"Blueprints"},{"c":"blueprint_weapon_specialcarbine_mk2","l":"Blueprint (Special Carbine MK2)","t":"Blueprints"},{"c":"blueprint_weapon_fal","l":"Blueprint (FAL)","t":"Blueprints"},{"c":"blueprint_weapon_ak47","l":"Blueprint (AK47)","t":"Blueprints"},{"c":"blueprint_weapon_akms","l":"Blueprint (AKMS)","t":"Blueprints"},{"c":"blueprint_weapon_g36c","l":"Blueprint (G36C)","t":"Blueprints"},{"c":"blueprint_weapon_ak74u","l":"Blueprint (AK74U)","t":"Blueprints"},{"c":"blueprint_weapon_ak74","l":"Blueprint (AK74)","t":"Blueprints"},{"c":"blueprint_weapon_mp40","l":"Blueprint (MP40)","t":"Blueprints"},{"c":"blueprint_weapon_mac11","l":"Blueprint (MAC11)","t":"Blueprints"},{"c":"blueprint_weapon_mac10","l":"Blueprint (MAC10)","t":"Blueprints"},{"c":"blueprint_weapon_tec9","l":"Blueprint (TEC9)","t":"Blueprints"},{"c":"blueprint_weapon_assaultsmg","l":"Blueprint (Assault SMG)","t":"Blueprints"},{"c":"blueprint_weapon_uzi","l":"Blueprint (UZI)","t":"Blueprints"},{"c":"blueprint_weapon_draco","l":"Blueprint (Draco)","t":"Blueprints"},{"c":"blueprint_weapon_mp5","l":"Blueprint (MP5)","t":"Blueprints"},{"c":"blueprint_weapon_mp5k","l":"Blueprint (MP5K)","t":"Blueprints"},{"c":"blueprint_weapon_combatpdw","l":"Blueprint (Combat PDW)","t":"Blueprints"},{"c":"blueprint_weapon_machinepistol","l":"Blueprint (Machine Pistol)","t":"Blueprints"},{"c":"blueprint_weapon_gusenberg","l":"Blueprint (Gusenberg Sweeper)","t":"Blueprints"},{"c":"blueprint_blank","l":"Blueprint (Blank)","t":"Blueprints"},{"c":"smg_barrel","l":"SMG Barrel","t":"Weapon Parts"},{"c":"smg_handguard","l":"SMG Handguard","t":"Weapon Parts"},{"c":"smg_receiver","l":"SMG Receiver","t":"Weapon Parts"},{"c":"smg_stock","l":"SMG Stock","t":"Weapon Parts"},{"c":"rifle_barrel","l":"Rifle Barrel","t":"Weapon Parts"},{"c":"rifle_handguard","l":"Rifle Handguard","t":"Weapon Parts"},{"c":"rifle_receiver","l":"Rifle Receiver","t":"Weapon Parts"},{"c":"rifle_stock","l":"Rifle Stock","t":"Weapon Parts"},{"c":"weapon_parts","l":"Weapon Parts","t":"Weapon Parts"},{"c":"armour_plate","l":"Kevlar Plate","t":"Weapon Parts"},{"c":"gunpowder","l":"Gunpowder","t":"Weapon Parts"},{"c":"disk_cutter_broken","l":"Industrial Angle Grinder (Broken)","t":"Tools"},{"c":"mystery_box_halloween","l":"Mystery Box (Halloween)","t":"Loot Containers"},{"c":"rifle_shell_casing_empty","l":"Empty Shell Casing (Rifle)","t":"Weapon Parts"},{"c":"glass_cutter","l":"Glass Cutter","t":"Heist"},{"c":"broken_glass_cutter","l":"Glass Cutter (Broken)","t":"Heist"},{"c":"vest_90","l":"Bulletproof Vest (90%)","t":"Medical"},{"c":"vest_80","l":"Bulletproof Vest (80%)","t":"Medical"},{"c":"vest_70","l":"Bulletproof Vest (70%)","t":"Medical"},{"c":"vest_60","l":"Bulletproof Vest (60%)","t":"Medical"},{"c":"vest_50","l":"Bulletproof Vest (50%)","t":"Medical"},{"c":"vest_40","l":"Bulletproof Vest (40%)","t":"Medical"},{"c":"vest_30","l":"Bulletproof Vest (30%)","t":"Medical"},{"c":"vest_20","l":"Bulletproof Vest (20%)","t":"Medical"},{"c":"vest_10","l":"Bulletproof Vest (10%)","t":"Medical"},{"c":"cut_emerald","l":"Emerald","t":"Mining"},{"c":"cut_sapphire","l":"Sapphire","t":"Mining"},{"c":"cut_ruby","l":"Ruby","t":"Mining"},{"c":"cut_diamond_small","l":"Diamond (Small)","t":"Mining"},{"c":"fishing_casket","l":"Fishing Casket","t":"Fishing"},{"c":"riot_shield","l":"Riot Shield","t":"Medical"},{"c":"food_tray","l":"Tray of Food","t":"Food"},{"c":"ingredients","l":"Ingredients","t":"Food"},{"c":"empty_bottled_water","l":"Bottled Water (Empty)","t":"Drinks"},{"c":"news_camera","l":"News Camera","t":"Tools"},{"c":"news_microphone","l":"Microphone","t":"Tools"},{"c":"plastic_wrap","l":"Plastic Wrap","t":"Tools"},{"c":"meth_block_a","l":"Meth Block (Blue)","t":"Drugs"},{"c":"meth_block_b","l":"Meth Block (Clear)","t":"Drugs"},{"c":"meth_block_c","l":"Meth Block (Cloudy)","t":"Drugs"},{"c":"meth_block_d","l":"Meth Block (White)","t":"Drugs"},{"c":"meth_block_e","l":"Meth Block (Green)","t":"Drugs"},{"c":"meth_weight_a","l":"Meth Slab (Blue)","t":"Drugs"},{"c":"meth_weight_b","l":"Meth Slab (Clear)","t":"Drugs"},{"c":"meth_weight_c","l":"Meth Slab (Cloudy)","t":"Drugs"},{"c":"meth_weight_d","l":"Meth Slab (White)","t":"Drugs"},{"c":"meth_weight_e","l":"Meth Slab (Green)","t":"Drugs"},{"c":"weed_box_g13","l":"Weed Box (G13)","t":"Weed"},{"c":"weed_box_acdc","l":"Weed Box (ACDC)","t":"Weed"},{"c":"weed_box_ak_47","l":"Weed Box (AK-47)","t":"Weed"},{"c":"weed_box_bay_11","l":"Weed Box (Bay 11)","t":"Weed"},{"c":"weed_box_cheese","l":"Weed Box (Cheese)","t":"Weed"},{"c":"weed_box_papaya","l":"Weed Box (Papaya)","t":"Weed"},{"c":"weed_box_fire_og","l":"Weed Box (Fire OG)","t":"Weed"},{"c":"weed_box_wifi_og","l":"Weed Box (Wifi OG)","t":"Weed"},{"c":"weed_box_agent_99","l":"Weed Box (Agent 99)","t":"Weed"},{"c":"weed_box_red_haze","l":"Weed Box (Red Haze)","t":"Weed"},{"c":"weed_box_mk_ultra","l":"Weed Box (MK Ultra)","t":"Weed"},{"c":"weed_box_diablo_og","l":"Weed Box (Diablo OG)","t":"Weed"},{"c":"weed_box_moon_rock","l":"Weed Box (Moon Rock)","t":"Weed"},{"c":"weed_box_pink_kush","l":"Weed Box (Pink Kush)","t":"Weed"},{"c":"weed_box_candyland","l":"Weed Box (Candyland)","t":"Weed"},{"c":"weed_box_the_white","l":"Weed Box (The White)","t":"Weed"},{"c":"weed_box_cornbread","l":"Weed Box (Cornbread)","t":"Weed"},{"c":"weed_box_gods_gift","l":"Weed Box (Gods Gift)","t":"Weed"},{"c":"weed_box_watermelon","l":"Weed Box (Watermelon)","t":"Weed"},{"c":"weed_box_boggle_gum","l":"Weed Box (Boggle Gum)","t":"Weed"},{"c":"weed_box_bubble_gum","l":"Weed Box (Bubble Gum)","t":"Weed"},{"c":"weed_box_bubba_kush","l":"Weed Box (Bubba Kush)","t":"Weed"},{"c":"weed_box_diamond_og","l":"Weed Box (Diamond OG)","t":"Weed"},{"c":"weed_box_rudeboi_og","l":"Weed Box (Rudeboi OG)","t":"Weed"},{"c":"weed_box_banana_kush","l":"Weed Box (Banana Kush)","t":"Weed"},{"c":"weed_box_lemon_skunk","l":"Weed Box (Lemon Skunk)","t":"Weed"},{"c":"weed_box_berry_white","l":"Weed Box (Berry White)","t":"Weed"},{"c":"weed_box_bubbleberry","l":"Weed Box (Bubbleberry)","t":"Weed"},{"c":"weed_box_silver_haze","l":"Weed Box (Silver Haze)","t":"Weed"},{"c":"weed_box_casey_jones","l":"Weed Box (Casey Jones)","t":"Weed"},{"c":"weed_box_black_domina","l":"Weed Box (Black Domina)","t":"Weed"},{"c":"weed_box_mendo_breath","l":"Weed Box (Mendo Breath)","t":"Weed"},{"c":"weed_box_lemon_skunk_2","l":"Weed Box (Lemon Skunk)","t":"Weed"},{"c":"weed_box_wonder_woman","l":"Weed Box (Wonder Woman)","t":"Weed"},{"c":"weed_box_dutch_dragon","l":"Weed Box (Dutch Dragon)","t":"Weed"},{"c":"weed_box_bruce_banner","l":"Weed Box (Bruce Banner)","t":"Weed"},{"c":"weed_box_afghan_diesel","l":"Weed Box (Afghan Diesel)","t":"Weed"},{"c":"weed_box_sugar_cookies","l":"Weed Box (Sugar Cookies)","t":"Weed"},{"c":"weed_box_pineapple_chunk","l":"Weed Box (Pineapple Chunk)","t":"Weed"},{"c":"weed_box_purple_headband","l":"Weed Box (Purple Headband)","t":"Weed"},{"c":"weed_box_grapefruit_haze","l":"Weed Box (Grapefruit Haze)","t":"Weed"},{"c":"weed_box_super_lemon_haze","l":"Weed Box (Super Lemon Haze)","t":"Weed"},{"c":"weed_box_golden_pineapple","l":"Weed Box (Golden Pineapple)","t":"Weed"},{"c":"weed_box_ghost_train_haze","l":"Weed Box (Ghost Train Haze)","t":"Weed"},{"c":"weed_box_black_cherry_soda","l":"Weed Box (Black Cherry Soda)","t":"Weed"},{"c":"weed_box_island_sweet_skunk","l":"Weed Box (Island Sweet Skunk)","t":"Weed"},{"c":"weed_box_grand_daddy_purple","l":"Weed Box (Grand Daddy Purple)","t":"Weed"},{"c":"weed_box_ultimate_trainwreck","l":"Weed Box (Ultimate Trainwreck)","t":"Weed"},{"c":"weed_box_white_tahoe_cookies","l":"Weed Box (White Tahoe Cookies)","t":"Weed"},{"c":"weed_box_blackberry_trainwreck","l":"Weed Box (Blackberry Trainwreck)","t":"Weed"},{"c":"weed_box_xj_13","l":"Weed Box (XJ-13)","t":"Weed"},{"c":"weed_box_mimosa","l":"Weed Box (Mimosa)","t":"Weed"},{"c":"weed_box_chronic","l":"Weed Box (Chronic)","t":"Weed"},{"c":"weed_box_true_og","l":"Weed Box (True OG)","t":"Weed"},{"c":"weed_box_trinity","l":"Weed Box (Trinity)","t":"Weed"},{"c":"weed_box_og_kush","l":"Weed Box (OG Kush)","t":"Weed"},{"c":"weed_box_sherbert","l":"Weed Box (Sherbert)","t":"Weed"},{"c":"weed_box_hells_og","l":"Weed Box (Hells OG)","t":"Weed"},{"c":"weed_box_canna_tsu","l":"Weed Box (Canna-Tsu)","t":"Weed"},{"c":"weed_box_jillybean","l":"Weed Box (Jillybean)","t":"Weed"},{"c":"weed_box_tora_bora","l":"Weed Box (Tora Bora)","t":"Weed"},{"c":"weed_box_do_si_dos","l":"Weed Box (Do-Si-Dos)","t":"Weed"},{"c":"weed_box_sour_kush","l":"Weed Box (Sour Kush)","t":"Weed"},{"c":"weed_box_g_13_haze","l":"Weed Box (G-13 Haze)","t":"Weed"},{"c":"weed_box_chocolope","l":"Weed Box (Chocolope)","t":"Weed"},{"c":"weed_box_skywalker","l":"Weed Box (Skywalker)","t":"Weed"},{"c":"weed_box_la_cheese","l":"Weed Box (LA Cheese)","t":"Weed"},{"c":"weed_box_cherry_og","l":"Weed Box (Cherry OG)","t":"Weed"},{"c":"weed_box_red_dragon","l":"Weed Box (Red Dragon)","t":"Weed"},{"c":"weed_box_blue_dream","l":"Weed Box (Blue Dream)","t":"Weed"},{"c":"weed_box_mango_kush","l":"Weed Box (Mango Kush)","t":"Weed"},{"c":"weed_box_chernobyl_2","l":"Weed Box (Chernobyl)","t":"Weed"},{"c":"weed_box_trainwreck","l":"Weed Box (Trainwreck)","t":"Weed"},{"c":"weed_box_early_girl","l":"Weed Box (Early Girl)","t":"Weed"},{"c":"weed_box_green_cush","l":"Weed Box (Green Cush)","t":"Weed"},{"c":"weed_box_jack_herer","l":"Weed Box (Jack Herer)","t":"Weed"},{"c":"weed_box_grapefruit","l":"Weed Box (Grapefruit)","t":"Weed"},{"c":"weed_box_death_star","l":"Weed Box (Death Star)","t":"Weed"},{"c":"weed_box_sensi_star","l":"Weed Box (Sensi Star)","t":"Weed"},{"c":"weed_box_maui_wowie","l":"Weed Box (Maui Wowie)","t":"Weed"},{"c":"weed_box_lemon_haze","l":"Weed Box (Lemon Haze)","t":"Weed"},{"c":"weed_box_nyc_diesel","l":"Weed Box (NYC Diesel)","t":"Weed"},{"c":"weed_box_sour_apple","l":"Weed Box (Sour Apple)","t":"Weed"},{"c":"weed_box_501st_og","l":"Weed Box (501st OG)","t":"Weed"},{"c":"weed_box_panama_red","l":"Weed Box (Panama Red)","t":"Weed"},{"c":"weed_box_wifi_mints","l":"Weed Box (WiFi Mints)","t":"Weed"},{"c":"weed_box_platinum_og","l":"Weed Box (Platinum OG)","t":"Weed"},{"c":"weed_box_master_kush","l":"Weed Box (Master Kush)","t":"Weed"},{"c":"weed_box_white_widow","l":"Weed Box (White Widow)","t":"Weed"},{"c":"weed_box_super_skunk","l":"Weed Box (Super Skunk)","t":"Weed"},{"c":"weed_box_star_killer","l":"Weed Box (Star Killer)","t":"Weed"},{"c":"weed_box_mango_tango","l":"Weed Box (Mango Tango)","t":"Weed"},{"c":"weed_box_green_crack","l":"Weed Box (Green Crack)","t":"Weed"},{"c":"weed_box_grand_hindu","l":"Weed Box (Grand Hindu)","t":"Weed"},{"c":"weed_box_afghan_kush","l":"Weed Box (Afghan Kush)","t":"Weed"},{"c":"weed_box_sour_tangie","l":"Weed Box (Sour Tangie)","t":"Weed"},{"c":"weed_box_purple_kush","l":"Weed Box (Purple Kush)","t":"Weed"},{"c":"weed_box_blue_cheese","l":"Weed Box (Blue Cheese)","t":"Weed"},{"c":"weed_box_dutch_treat","l":"Weed Box (Dutch Treat)","t":"Weed"},{"c":"weed_box_white_rhino","l":"Weed Box (White Rhino)","t":"Weed"},{"c":"weed_box_quantum_kush","l":"Weed Box (Quantum Kush)","t":"Weed"},{"c":"weed_box_khalifa_kush","l":"Weed Box (Khalifa Kush)","t":"Weed"},{"c":"weed_box_jungle_juice","l":"Weed Box (Jungle Juice)","t":"Weed"},{"c":"weed_box_banana_split","l":"Weed Box (Banana Split)","t":"Weed"},{"c":"weed_box_amnesia_haze","l":"Weed Box (Amnesia Haze)","t":"Weed"},{"c":"weed_box_agent_orange","l":"Weed Box (Agent Orange)","t":"Weed"},{"c":"weed_box_purple_urkle","l":"Weed Box (Purple Urkle)","t":"Weed"},{"c":"weed_box_orange_crush","l":"Weed Box (Orange Crush)","t":"Weed"},{"c":"weed_box_purple_punch","l":"Weed Box (Purple Punch)","t":"Weed"},{"c":"weed_box_cinderella_99","l":"Weed Box (Cinderella 99)","t":"Weed"},{"c":"weed_box_white_fire_og","l":"Weed Box (White Fire OG)","t":"Weed"},{"c":"weed_box_durban_poison","l":"Weed Box (Durban Poison)","t":"Weed"},{"c":"weed_box_critical_kush","l":"Weed Box (Critical Kush)","t":"Weed"},{"c":"weed_box_colombian_gold","l":"Weed Box (Colombian Gold)","t":"Weed"},{"c":"weed_box_fire_alien_kush","l":"Weed Box (Fire Alien Kush)","t":"Weed"},{"c":"weed_box_chocolate_chunk","l":"Weed Box (Chocolate Chunk)","t":"Weed"},{"c":"weed_box_blackberry_kush","l":"Weed Box (Blackberry Kush)","t":"Weed"},{"c":"weed_box_la_confidential","l":"Weed Box (LA Confidential)","t":"Weed"},{"c":"weed_box_island_maui_haze","l":"Weed Box (Island Maui Haze)","t":"Weed"},{"c":"weed_box_cotton_candy_kush","l":"Weed Box (Cotton Candy Kush)","t":"Weed"},{"c":"weed_box_strawberry_banana","l":"Weed Box (Strawberry Banana)","t":"Weed"},{"c":"weed_box_super_silver_haze","l":"Weed Box (Super Silver Haze)","t":"Weed"},{"c":"weed_box_cookies_and_cream","l":"Weed Box (Cookies and Cream)","t":"Weed"},{"c":"weed_box_blueberry_headband","l":"Weed Box (Blueberry Headband)","t":"Weed"},{"c":"weed_box_platinum_girl_scout_cookies","l":"Weed Box (Platinum Girl Scout Cookies)","t":"Weed"},{"c":"weed_box_j1","l":"Weed Box (J1)","t":"Weed"},{"c":"weed_box_flo","l":"Weed Box (Flo)","t":"Weed"},{"c":"weed_box_cinex","l":"Weed Box (Cinex)","t":"Weed"},{"c":"weed_box_blues","l":"Weed Box (Blues)","t":"Weed"},{"c":"weed_box_tangie","l":"Weed Box (Tangie)","t":"Weed"},{"c":"weed_box_yoda_og","l":"Weed Box (Yoda OG)","t":"Weed"},{"c":"weed_box_snowcap","l":"Weed Box (Snowcap)","t":"Weed"},{"c":"weed_box_romulan","l":"Weed Box (Romulan)","t":"Weed"},{"c":"weed_box_zkittlez","l":"Weed Box (Zkittlez)","t":"Weed"},{"c":"weed_box_el_chapo","l":"Weed Box (El Chapo)","t":"Weed"},{"c":"weed_box_chemdawg","l":"Weed Box (Chemdawg)","t":"Weed"},{"c":"weed_box_alien_og","l":"Weed Box (Alien OG)","t":"Weed"},{"c":"weed_box_headband","l":"Weed Box (Headband)","t":"Weed"},{"c":"weed_box_chernobyl","l":"Weed Box (Chernobyl)","t":"Weed"},{"c":"weed_box_jedi_kush","l":"Weed Box (Jedi Kush)","t":"Weed"},{"c":"weed_box_harlequin","l":"Weed Box (Harlequin)","t":"Weed"},{"c":"weed_box_blueberry","l":"Weed Box (Blueberry)","t":"Weed"},{"c":"weed_box_grape_ape","l":"Weed Box (Grape Ape)","t":"Weed"},{"c":"weed_box_sour_grape","l":"Weed Box (Sour Grape)","t":"Weed"},{"c":"weed_box_kimbo_kush","l":"Weed Box (Kimbo Kush)","t":"Weed"},{"c":"weed_box_mango_haze","l":"Weed Box (Mango Haze)","t":"Weed"},{"c":"weed_box_hindu_kush","l":"Weed Box (Hindu Kush)","t":"Weed"},{"c":"weed_box_chem_wreck","l":"Weed Box (Chem Wreck)","t":"Weed"},{"c":"weed_box_lemon_kush","l":"Weed Box (Lemon Kush)","t":"Weed"},{"c":"weed_box_uncle_andy","l":"Weed Box (Uncle Andy)","t":"Weed"},{"c":"weed_box_cherry_pie","l":"Weed Box (Cherry Pie)","t":"Weed"},{"c":"weed_box_kryptonite","l":"Weed Box (Kryptonite)","t":"Weed"},{"c":"weed_box_purple_haze","l":"Weed Box (Purple Haze)","t":"Weed"},{"c":"weed_box_kosher_kush","l":"Weed Box (Kosher Kush)","t":"Weed"},{"c":"weed_box_tahoe_alien","l":"Weed Box (Tahoe Alien)","t":"Weed"},{"c":"weed_box_cherry_bomb","l":"Weed Box (Cherry Bomb)","t":"Weed"},{"c":"weed_box_sweet_tooth","l":"Weed Box (Sweet Tooth)","t":"Weed"},{"c":"weed_box_shark_shock","l":"Weed Box (Shark Shock)","t":"Weed"},{"c":"weed_box_golden_goat","l":"Weed Box (Golden Goat)","t":"Weed"},{"c":"weed_box_blue_diesel","l":"Weed Box (Blue Diesel)","t":"Weed"},{"c":"weed_box_sour_diesel","l":"Weed Box (Sour Diesel)","t":"Weed"},{"c":"weed_box_sage_n_sour","l":"Weed Box (Sage N Sour)","t":"Weed"},{"c":"weed_box_death_bubba","l":"Weed Box (Death Bubba)","t":"Weed"},{"c":"weed_box_lambs_bread","l":"Weed Box (Lambs Bread)","t":"Weed"},{"c":"weed_box_vanilla_kush","l":"Weed Box (Vanilla Kush)","t":"Weed"},{"c":"weed_box_cotton_candy","l":"Weed Box (Cotton Candy)","t":"Weed"},{"c":"weed_box_gorilla_glue","l":"Weed Box (Gorilla Glue)","t":"Weed"},{"c":"weed_box_pink_cookies","l":"Weed Box (Pink Cookies)","t":"Weed"},{"c":"weed_box_lucky_charms","l":"Weed Box (Lucky Charms)","t":"Weed"},{"c":"weed_box_skywalker_og","l":"Weed Box (Skywalker OG)","t":"Weed"},{"c":"weed_box_wedding_cake","l":"Weed Box (Wedding Cake)","t":"Weed"},{"c":"weed_box_cherry_ak_47","l":"Weed Box (Cherry AK-47)","t":"Weed"},{"c":"weed_box_dr_grinspoon","l":"Weed Box (Dr. Grinspoon)","t":"Weed"},{"c":"weed_box_black_diamond","l":"Weed Box (Black Diamond)","t":"Weed"},{"c":"weed_box_hawaiian_snow","l":"Weed Box (Hawaiian Snow)","t":"Weed"},{"c":"weed_box_violator_kush","l":"Weed Box (Violator Kush)","t":"Weed"},{"c":"weed_box_pink_lemonade","l":"Weed Box (Pink Lemonade)","t":"Weed"},{"c":"weed_box_purple_diesel","l":"Weed Box (Purple Diesel)","t":"Weed"},{"c":"weed_box_tahoe_og_kush","l":"Weed Box (Tahoe OG Kush)","t":"Weed"},{"c":"weed_box_love_potion_1","l":"Weed Box (Love Potion #1)","t":"Weed"},{"c":"weed_box_orange_cookies","l":"Weed Box (Orange Cookies)","t":"Weed"},{"c":"weed_box_chocolate_thai","l":"Weed Box (Chocolate Thai)","t":"Weed"},{"c":"weed_box_lemon_meringue","l":"Weed Box (Lemon Meringue)","t":"Weed"},{"c":"weed_box_charlottes_web","l":"Weed Box (Charlottes Web)","t":"Weed"},{"c":"weed_box_wedding_crasher","l":"Weed Box (Wedding Crasher)","t":"Weed"},{"c":"weed_box_northern_lights","l":"Weed Box (Northern Lights)","t":"Weed"},{"c":"weed_box_forbidden_fruit","l":"Weed Box (Forbidden Fruit)","t":"Weed"},{"c":"weed_box_trainwreck_haze","l":"Weed Box (Trainwreck Haze)","t":"Weed"},{"c":"weed_box_king_louis_xiii","l":"Weed Box (King Louis XIII)","t":"Weed"},{"c":"weed_box_strawberry_cough","l":"Weed Box (Strawberry Cough)","t":"Weed"},{"c":"weed_box_vanilla_frosting","l":"Weed Box (Vanilla Frosting)","t":"Weed"},{"c":"weed_box_9_pound_hammer","l":"Weed Box (9 Pound Hammer)","t":"Weed"},{"c":"weed_box_blueberry_diesel","l":"Weed Box (Blueberry Diesel)","t":"Weed"},{"c":"weed_box_strawberry_diesel","l":"Weed Box (Strawberry Diesel)","t":"Weed"},{"c":"weed_box_lemon_sour_diesel","l":"Weed Box (Lemon Sour Diesel)","t":"Weed"},{"c":"weed_box_heavy_duty_fruity","l":"Weed Box (Heavy Duty Fruity)","t":"Weed"},{"c":"weed_box_pineapple_express","l":"Weed Box (Pineapple Express)","t":"Weed"},{"c":"weed_box_super_sour_diesel","l":"Weed Box (Super Sour Diesel)","t":"Weed"},{"c":"weed_box_girl_scout_cookies","l":"Weed Box (Girl Scout Cookies)","t":"Weed"},{"c":"weed_box_alaskan_thunderfuck","l":"Weed Box (Alaskan Thunderfuck)","t":"Weed"},{"c":"weed_box_pops_pot","l":"Weed Box (Pops Pot)","t":"Weed"},{"c":"shrooms_seed","l":"Mushrooms Spores Pack","t":"Shrooms"},{"c":"shrooms_bag_geastrum_spp","l":"Shrooms Bag (Geastrum spp)","t":"Shrooms"},{"c":"shrooms_bag_boletus_edulis","l":"Shrooms Bag (Boletus edulis)","t":"Shrooms"},{"c":"shrooms_bag_morchella_spp","l":"Shrooms Bag (Morchella spp)","t":"Shrooms"},{"c":"shrooms_bag_hydnum_repandum","l":"Shrooms Bag (Hydnum repandum)","t":"Shrooms"},{"c":"shrooms_bag_pholiota_nameko","l":"Shrooms Bag (Pholiota nameko)","t":"Shrooms"},{"c":"shrooms_bag_lentinula_edodes","l":"Shrooms Bag (Lentinula edodes)","t":"Shrooms"},{"c":"shrooms_bag_grifola_frondosa","l":"Shrooms Bag (Grifola frondosa)","t":"Shrooms"},{"c":"shrooms_bag_pleurotus_djamor","l":"Shrooms Bag (Pleurotus djamor)","t":"Shrooms"},{"c":"shrooms_bag_coprinus_comatus","l":"Shrooms Bag (Coprinus comatus)","t":"Shrooms"},{"c":"shrooms_bag_hericium_abietis","l":"Shrooms Bag (Hericium abietis)","t":"Shrooms"},{"c":"shrooms_bag_sparassis_crispa","l":"Shrooms Bag (Sparassis crispa)","t":"Shrooms"},{"c":"shrooms_bag_amanita_caesarea","l":"Shrooms Bag (Amanita caesarea)","t":"Shrooms"},{"c":"shrooms_bag_amanita_muscaria","l":"Shrooms Bag (Amanita muscaria)","t":"Shrooms"},{"c":"shrooms_bag_agaricus_bisporus","l":"Shrooms Bag (Agaricus bisporus)","t":"Shrooms"},{"c":"shrooms_bag_pleurotus_eryngii","l":"Shrooms Bag (Pleurotus eryngii)","t":"Shrooms"},{"c":"shrooms_bag_ganoderma_lucidum","l":"Shrooms Bag (Ganoderma lucidum)","t":"Shrooms"},{"c":"shrooms_bag_agrocybe_aegerita","l":"Shrooms Bag (Agrocybe aegerita)","t":"Shrooms"},{"c":"shrooms_bag_phallus_impudicus","l":"Shrooms Bag (Phallus impudicus)","t":"Shrooms"},{"c":"shrooms_bag_hericium_erinaceus","l":"Shrooms Bag (Hericium erinaceus)","t":"Shrooms"},{"c":"shrooms_bag_cordyceps_sinensis","l":"Shrooms Bag (Cordyceps sinensis)","t":"Shrooms"},{"c":"shrooms_bag_craterellus_fallax","l":"Shrooms Bag (Craterellus fallax)","t":"Shrooms"},{"c":"shrooms_bag_entoloma_abortivum","l":"Shrooms Bag (Entoloma abortivum)","t":"Shrooms"},{"c":"shrooms_bag_pleurotus_ostreatus","l":"Shrooms Bag (Pleurotus ostreatus)","t":"Shrooms"},{"c":"shrooms_bag_trametes_versicolor","l":"Shrooms Bag (Trametes versicolor)","t":"Shrooms"},{"c":"shrooms_bag_hypsizygus_ulmarius","l":"Shrooms Bag (Hypsizygus ulmarius)","t":"Shrooms"},{"c":"shrooms_bag_hericium_americanum","l":"Shrooms Bag (Hericium americanum)","t":"Shrooms"},{"c":"shrooms_bag_flammulina_velutipes","l":"Shrooms Bag (Flammulina velutipes)","t":"Shrooms"},{"c":"shrooms_bag_tricholoma_matsutake","l":"Shrooms Bag (Tricholoma matsutake)","t":"Shrooms"},{"c":"shrooms_bag_volvariella_volvacea","l":"Shrooms Bag (Volvariella volvacea)","t":"Shrooms"},{"c":"shrooms_bag_tremella_mesenterica","l":"Shrooms Bag (Tremella mesenterica)","t":"Shrooms"},{"c":"shrooms_bag_cantharellus_cibarius","l":"Shrooms Bag (Cantharellus cibarius)","t":"Shrooms"},{"c":"shrooms_bag_laetiporus_sulphureus","l":"Shrooms Bag (Laetiporus sulphureus)","t":"Shrooms"},{"c":"shrooms_bag_agaricus_xanthodermus","l":"Shrooms Bag (Agaricus xanthodermus)","t":"Shrooms"},{"c":"shrooms_bag_hypsizygus_tessellatus","l":"Shrooms Bag (Hypsizygus tessellatus)","t":"Shrooms"},{"c":"shrooms_bag_tricholoma_magnivelare","l":"Shrooms Bag (Tricholoma magnivelare)","t":"Shrooms"},{"c":"shrooms_bag_hypomyces_lactifluorum","l":"Shrooms Bag (Hypomyces lactifluorum)","t":"Shrooms"},{"c":"shrooms_bag_craterellus_tubaeformis","l":"Shrooms Bag (Craterellus tubaeformis)","t":"Shrooms"},{"c":"shrooms_bag_pleurocybella_porrigens","l":"Shrooms Bag (Pleurocybella porrigens)","t":"Shrooms"},{"c":"shrooms_bag_stropharia_rugosoannulata","l":"Shrooms Bag (Stropharia rugosoannulata)","t":"Shrooms"},{"c":"shrooms_bag_auricularia_auricula","l":"Shrooms Bag (Auricularia auricula)","t":"Shrooms"},{"c":"shrooms_bag_craterellus_cornucopioides","l":"Shrooms Bag (Craterellus cornucopioides)","t":"Shrooms"},{"c":"plant_tray","l":"Planter Tray","t":"Weed"},{"c":"shrooms_pack_geastrum_spp","l":"Shrooms Pack (Geastrum spp)","t":"Shrooms"},{"c":"shrooms_pack_boletus_edulis","l":"Shrooms Pack (Boletus edulis)","t":"Shrooms"},{"c":"shrooms_pack_morchella_spp","l":"Shrooms Pack (Morchella spp)","t":"Shrooms"},{"c":"shrooms_pack_hydnum_repandum","l":"Shrooms Pack (Hydnum repandum)","t":"Shrooms"},{"c":"shrooms_pack_pholiota_nameko","l":"Shrooms Pack (Pholiota nameko)","t":"Shrooms"},{"c":"shrooms_pack_lentinula_edodes","l":"Shrooms Pack (Lentinula edodes)","t":"Shrooms"},{"c":"shrooms_pack_grifola_frondosa","l":"Shrooms Pack (Grifola frondosa)","t":"Shrooms"},{"c":"shrooms_pack_pleurotus_djamor","l":"Shrooms Pack (Pleurotus djamor)","t":"Shrooms"},{"c":"shrooms_pack_coprinus_comatus","l":"Shrooms Pack (Coprinus comatus)","t":"Shrooms"},{"c":"shrooms_pack_hericium_abietis","l":"Shrooms Pack (Hericium abietis)","t":"Shrooms"},{"c":"shrooms_pack_sparassis_crispa","l":"Shrooms Pack (Sparassis crispa)","t":"Shrooms"},{"c":"shrooms_pack_amanita_caesarea","l":"Shrooms Pack (Amanita caesarea)","t":"Shrooms"},{"c":"shrooms_pack_amanita_muscaria","l":"Shrooms Pack (Amanita muscaria)","t":"Shrooms"},{"c":"shrooms_pack_agaricus_bisporus","l":"Shrooms Pack (Agaricus bisporus)","t":"Shrooms"},{"c":"shrooms_pack_pleurotus_eryngii","l":"Shrooms Pack (Pleurotus eryngii)","t":"Shrooms"},{"c":"shrooms_pack_ganoderma_lucidum","l":"Shrooms Pack (Ganoderma lucidum)","t":"Shrooms"},{"c":"shrooms_pack_agrocybe_aegerita","l":"Shrooms Pack (Agrocybe aegerita)","t":"Shrooms"},{"c":"shrooms_pack_phallus_impudicus","l":"Shrooms Pack (Phallus impudicus)","t":"Shrooms"},{"c":"shrooms_pack_hericium_erinaceus","l":"Shrooms Pack (Hericium erinaceus)","t":"Shrooms"},{"c":"shrooms_pack_cordyceps_sinensis","l":"Shrooms Pack (Cordyceps sinensis)","t":"Shrooms"},{"c":"shrooms_pack_craterellus_fallax","l":"Shrooms Pack (Craterellus fallax)","t":"Shrooms"},{"c":"shrooms_pack_entoloma_abortivum","l":"Shrooms Pack (Entoloma abortivum)","t":"Shrooms"},{"c":"shrooms_pack_pleurotus_ostreatus","l":"Shrooms Pack (Pleurotus ostreatus)","t":"Shrooms"},{"c":"shrooms_pack_trametes_versicolor","l":"Shrooms Pack (Trametes versicolor)","t":"Shrooms"},{"c":"shrooms_pack_hypsizygus_ulmarius","l":"Shrooms Pack (Hypsizygus ulmarius)","t":"Shrooms"},{"c":"shrooms_pack_hericium_americanum","l":"Shrooms Pack (Hericium americanum)","t":"Shrooms"},{"c":"shrooms_pack_flammulina_velutipes","l":"Shrooms Pack (Flammulina velutipes)","t":"Shrooms"},{"c":"shrooms_pack_tricholoma_matsutake","l":"Shrooms Pack (Tricholoma matsutake)","t":"Shrooms"},{"c":"shrooms_pack_volvariella_volvacea","l":"Shrooms Pack (Volvariella volvacea)","t":"Shrooms"},{"c":"shrooms_pack_tremella_mesenterica","l":"Shrooms Pack (Tremella mesenterica)","t":"Shrooms"},{"c":"shrooms_pack_cantharellus_cibarius","l":"Shrooms Pack (Cantharellus cibarius)","t":"Shrooms"},{"c":"shrooms_pack_laetiporus_sulphureus","l":"Shrooms Pack (Laetiporus sulphureus)","t":"Shrooms"},{"c":"shrooms_pack_agaricus_xanthodermus","l":"Shrooms Pack (Agaricus xanthodermus)","t":"Shrooms"},{"c":"shrooms_pack_hypsizygus_tessellatus","l":"Shrooms Pack (Hypsizygus tessellatus)","t":"Shrooms"},{"c":"shrooms_pack_tricholoma_magnivelare","l":"Shrooms Pack (Tricholoma magnivelare)","t":"Shrooms"},{"c":"shrooms_pack_hypomyces_lactifluorum","l":"Shrooms Pack (Hypomyces lactifluorum)","t":"Shrooms"},{"c":"shrooms_pack_craterellus_tubaeformis","l":"Shrooms Pack (Craterellus tubaeformis)","t":"Shrooms"},{"c":"shrooms_pack_pleurocybella_porrigens","l":"Shrooms Pack (Pleurocybella porrigens)","t":"Shrooms"},{"c":"shrooms_pack_stropharia_rugosoannulata","l":"Shrooms Pack (Stropharia rugosoannulata)","t":"Shrooms"},{"c":"shrooms_pack_auricularia_auricula","l":"Shrooms Pack (Auricularia auricula)","t":"Shrooms"},{"c":"shrooms_pack_craterellus_cornucopioides","l":"Shrooms Pack (Craterellus cornucopioides)","t":"Shrooms"},{"c":"shrooms_box_geastrum_spp","l":"Shrooms Box (Geastrum spp)","t":"Shrooms"},{"c":"shrooms_box_boletus_edulis","l":"Shrooms Box (Boletus edulis)","t":"Shrooms"},{"c":"shrooms_box_morchella_spp","l":"Shrooms Box (Morchella spp)","t":"Shrooms"},{"c":"shrooms_box_hydnum_repandum","l":"Shrooms Box (Hydnum repandum)","t":"Shrooms"},{"c":"shrooms_box_pholiota_nameko","l":"Shrooms Box (Pholiota nameko)","t":"Shrooms"},{"c":"shrooms_box_lentinula_edodes","l":"Shrooms Box (Lentinula edodes)","t":"Shrooms"},{"c":"shrooms_box_grifola_frondosa","l":"Shrooms Box (Grifola frondosa)","t":"Shrooms"},{"c":"shrooms_box_pleurotus_djamor","l":"Shrooms Box (Pleurotus djamor)","t":"Shrooms"},{"c":"shrooms_box_coprinus_comatus","l":"Shrooms Box (Coprinus comatus)","t":"Shrooms"},{"c":"shrooms_box_hericium_abietis","l":"Shrooms Box (Hericium abietis)","t":"Shrooms"},{"c":"shrooms_box_sparassis_crispa","l":"Shrooms Box (Sparassis crispa)","t":"Shrooms"},{"c":"shrooms_box_amanita_caesarea","l":"Shrooms Box (Amanita caesarea)","t":"Shrooms"},{"c":"shrooms_box_amanita_muscaria","l":"Shrooms Box (Amanita muscaria)","t":"Shrooms"},{"c":"shrooms_box_agaricus_bisporus","l":"Shrooms Box (Agaricus bisporus)","t":"Shrooms"},{"c":"shrooms_box_pleurotus_eryngii","l":"Shrooms Box (Pleurotus eryngii)","t":"Shrooms"},{"c":"shrooms_box_ganoderma_lucidum","l":"Shrooms Box (Ganoderma lucidum)","t":"Shrooms"},{"c":"shrooms_box_agrocybe_aegerita","l":"Shrooms Box (Agrocybe aegerita)","t":"Shrooms"},{"c":"shrooms_box_phallus_impudicus","l":"Shrooms Box (Phallus impudicus)","t":"Shrooms"},{"c":"shrooms_box_hericium_erinaceus","l":"Shrooms Box (Hericium erinaceus)","t":"Shrooms"},{"c":"shrooms_box_cordyceps_sinensis","l":"Shrooms Box (Cordyceps sinensis)","t":"Shrooms"},{"c":"shrooms_box_craterellus_fallax","l":"Shrooms Box (Craterellus fallax)","t":"Shrooms"},{"c":"shrooms_box_entoloma_abortivum","l":"Shrooms Box (Entoloma abortivum)","t":"Shrooms"},{"c":"shrooms_box_pleurotus_ostreatus","l":"Shrooms Box (Pleurotus ostreatus)","t":"Shrooms"},{"c":"shrooms_box_trametes_versicolor","l":"Shrooms Box (Trametes versicolor)","t":"Shrooms"},{"c":"shrooms_box_hypsizygus_ulmarius","l":"Shrooms Box (Hypsizygus ulmarius)","t":"Shrooms"},{"c":"shrooms_box_hericium_americanum","l":"Shrooms Box (Hericium americanum)","t":"Shrooms"},{"c":"shrooms_box_flammulina_velutipes","l":"Shrooms Box (Flammulina velutipes)","t":"Shrooms"},{"c":"shrooms_box_tricholoma_matsutake","l":"Shrooms Box (Tricholoma matsutake)","t":"Shrooms"},{"c":"shrooms_box_volvariella_volvacea","l":"Shrooms Box (Volvariella volvacea)","t":"Shrooms"},{"c":"shrooms_box_tremella_mesenterica","l":"Shrooms Box (Tremella mesenterica)","t":"Shrooms"},{"c":"shrooms_box_cantharellus_cibarius","l":"Shrooms Box (Cantharellus cibarius)","t":"Shrooms"},{"c":"shrooms_box_laetiporus_sulphureus","l":"Shrooms Box (Laetiporus sulphureus)","t":"Shrooms"},{"c":"shrooms_box_agaricus_xanthodermus","l":"Shrooms Box (Agaricus xanthodermus)","t":"Shrooms"},{"c":"shrooms_box_hypsizygus_tessellatus","l":"Shrooms Box (Hypsizygus tessellatus)","t":"Shrooms"},{"c":"shrooms_box_tricholoma_magnivelare","l":"Shrooms Box (Tricholoma magnivelare)","t":"Shrooms"},{"c":"shrooms_box_hypomyces_lactifluorum","l":"Shrooms Box (Hypomyces lactifluorum)","t":"Shrooms"},{"c":"shrooms_box_craterellus_tubaeformis","l":"Shrooms Box (Craterellus tubaeformis)","t":"Shrooms"},{"c":"shrooms_box_pleurocybella_porrigens","l":"Shrooms Box (Pleurocybella porrigens)","t":"Shrooms"},{"c":"shrooms_box_stropharia_rugosoannulata","l":"Shrooms Box (Stropharia rugosoannulata)","t":"Shrooms"},{"c":"shrooms_box_auricularia_auricula","l":"Shrooms Box (Auricularia auricula)","t":"Shrooms"},{"c":"shrooms_box_craterellus_cornucopioides","l":"Shrooms Box (Craterellus cornucopioides)","t":"Shrooms"},{"c":"ketamine_tray","l":"Ketamine (Tray)","t":"Drugs"},{"c":"ketamine_vial","l":"Ketamine (Ampule)","t":"Drugs"},{"c":"bicarbonate_soda","l":"Bicarbonate of Soda","t":"Tools"},{"c":"ketamine_bag","l":"Ketamine (Bag)","t":"Drugs"},{"c":"megaphone","l":"Megaphone","t":"Tools"},{"c":"mod_weapon_paint_0","l":"Weapon Paint (Black)","t":"Weapon Mods"},{"c":"mod_weapon_paint_1","l":"Weapon Paint (Gray)","t":"Weapon Mods"},{"c":"mod_weapon_paint_2","l":"Weapon Paint (Gold)","t":"Weapon Mods"},{"c":"mod_weapon_paint_3","l":"Weapon Paint (Pink)","t":"Weapon Mods"},{"c":"mod_weapon_paint_4","l":"Weapon Paint (Tan)","t":"Weapon Mods"},{"c":"mod_weapon_paint_5","l":"Weapon Paint (Blue)","t":"Weapon Mods"},{"c":"mod_weapon_paint_6","l":"Weapon Paint (Orange)","t":"Weapon Mods"},{"c":"mod_weapon_paint_7","l":"Weapon Paint (Platinum)","t":"Weapon Mods"},{"c":"mystery_box_weapon_paint","l":"Mystery Box (Weapon Paint)","t":"Loot Containers"},{"c":"tow_rope","l":"Towing Rope","t":"Tools"},{"c":"blindfold","l":"Blindfold","t":"Loot Containers"}];
+const RW=[{"c":"WEAPON_MG","l":"MG"},{"c":"WEAPON_SMG","l":"SMG"},{"c":"WEAPON_RPG","l":"RPG"},{"c":"WEAPON_BALL","l":"Ball"},{"c":"WEAPON_KNIFE","l":"Knife"},{"c":"WEAPON_STINGER","l":"RPG"},{"c":"WEAPON_FLARE","l":"Flare"},{"c":"WEAPON_BZGAS","l":"BZ Gas"},{"c":"WEAPON_HAMMER","l":"Hammer"},{"c":"WEAPON_PISTOL","l":"Pistol"},{"c":"WEAPON_BOTTLE","l":"Bottle"},{"c":"WEAPON_MUSKET","l":"Musket"},{"c":"WEAPON_UNARMED","l":"Unarmed"},{"c":"WEAPON_CROWBAR","l":"Crowbar"},{"c":"WEAPON_MINIGUN","l":"Minigun"},{"c":"WEAPON_GRENADE","l":"Grenade"},{"c":"WEAPON_MOLOTOV","l":"Molotov"},{"c":"WEAPON_RAILGUN","l":"Railgun"},{"c":"WEAPON_HATCHET","l":"Hatchet"},{"c":"WEAPON_HANDCUFFS","l":"Knife"},{"c":"WEAPON_MACHETE","l":"Machete"},{"c":"WEAPON_BAT","l":"Baseball Bat"},{"c":"WEAPON_STUNGUN","l":"Stun Gun"},{"c":"WEAPON_TANK","l":"Tank Cannon"},{"c":"WEAPON_MINISMG","l":"Mini SMG"},{"c":"WEAPON_POOLCUE","l":"Pool Cue"},{"c":"WEAPON_ENEMY_LASER","l":"Laser"},{"c":"WEAPON_BIRD_CRAP","l":"Grenade"},{"c":"WEAPON_SNOWBALL","l":"Snowball"},{"c":"WEAPON_SMG_MK2","l":"SMG Mk II"},{"c":"WEAPON_GOLFCLUB","l":"Golf Club"},{"c":"WEAPON_APPISTOL","l":"AP Pistol"},{"c":"WEAPON_MICROSMG","l":"Micro SMG"},{"c":"WEAPON_COMBATMG","l":"Combat MG"},{"c":"WEAPON_PLAYER_LASER","l":"Laser"},{"c":"WEAPON_FLAREGUN","l":"Flare Gun"},{"c":"WEAPON_THAMMER","l":"The Hammer"},{"c":"WEAPON_WRENCH","l":"Pipe Wrench"},{"c":"WEAPON_PIPEBOMB","l":"Pipe Bomb"},{"c":"WEAPON_PISTOL50","l":"Pistol .50"},{"c":"WEAPON_PETROLCAN","l":"Jerry Can"},{"c":"WEAPON_PLAYER_LAZER","l":"Cannon"},{"c":"WEAPON_STUNGUN_MP","l":"Stun Gun"},{"c":"WEAPON_FIVESEVEN","l":"Five Seven"},{"c":"WEAPON_SNSPISTOL","l":"SNS Pistol"},{"c":"WEAPON_PLAYER_SAVAGE","l":"Cannon"},{"c":"WEAPON_COMBATPDW","l":"Combat PDW"},{"c":"WEAPON_BATTLEAXE","l":"Battle Axe"},{"c":"WEAPON_NIGHTSTICK","l":"Nightstick"},{"c":"WEAPON_SMOKEGRENADE","l":"Tear Gas"},{"c":"WEAPON_SPACE_ROCKET","l":"Missiles"},{"c":"WEAPON_PLANE_ROCKET","l":"Missiles"},{"c":"WEAPON_RAYMINIGUN","l":"Widowmaker"},{"c":"WEAPON_TRANQUILIZER","l":"Stun Gun"},{"c":"WEAPON_FLASHLIGHT","l":"Flashlight"},{"c":"WEAPON_GARBAGEBAG","l":"Garbage Bag"},{"c":"WEAPON_ASSAULTSMG","l":"Assault SMG"},{"c":"WEAPON_STICKYBOMB","l":"Sticky Bomb"},{"c":"WEAPON_DIGISCANNER","l":"Digiscanner"},{"c":"WEAPON_KNUCKLE","l":"Knuckle Duster"},{"c":"WEAPON_AIR_DEFENCE_GUN","l":"Cannon"},{"c":"WEAPON_RUINER_ROCKET","l":"Missiles"},{"c":"WEAPON_HEAVYRIFLE","l":"Heavy Rifle"},{"c":"WEAPON_PROXMINE","l":"Proximity Mine"},{"c":"WEAPON_RAYPISTOL","l":"Up-n-Atomizer"},{"c":"WEAPON_TURRET_LIMO","l":"Machine Gun"},{"c":"WEAPON_REVOLVER","l":"Heavy Revolver"},{"c":"WEAPON_SWITCHBLADE","l":"Switchblade"},{"c":"WEAPON_PISTOL_MK2","l":"Pistol Mk II"},{"c":"WEAPON_PUMPSHOTGUN","l":"Pump Shotgun"},{"c":"WEAPON_SNIPERRIFLE","l":"Sniper Rifle"},{"c":"WEAPON_HEAVYSNIPER","l":"Heavy Sniper"},{"c":"WEAPON_HEAVYPISTOL","l":"Heavy Pistol"},{"c":"WEAPON_EMPLAUNCHER","l":"EMP Launcher"},{"c":"WEAPON_PLAYER_BULLET","l":"Machine Gun"},{"c":"WEAPON_PLAYER_HUNTER","l":"Machine Gun"},{"c":"WEAPON_CANNON_BLAZER","l":"Machine Gun"},{"c":"WEAPON_RUINER_BULLET","l":"Machine Gun"},{"c":"WEAPON_COMBATPISTOL","l":"Combat Pistol"},{"c":"WEAPON_ASSAULTRIFLE","l":"Assault Rifle"},{"c":"WEAPON_CARBINERIFLE","l":"Carbine Rifle"},{"c":"WEAPON_REMOTESNIPER","l":"Remote Sniper"},{"c":"WEAPON_PLAYER_BUZZARD","l":"Machine Gun"},{"c":"WEAPON_BULLPUPRIFLE","l":"Bullpup Rifle"},{"c":"WEAPON_FIREWORK","l":"Firework Launcher"},{"c":"WEAPON_HEAVYSHOTGUN","l":"Heavy Shotgun"},{"c":"WEAPON_GADGETPISTOL","l":"Perico Pistol"},{"c":"WEAPON_NAVYREVOLVER","l":"Navy Revolver"},{"c":"WEAPON_COMPACTRIFLE","l":"Compact Rifle"},{"c":"WEAPON_ARENA_HOMING_MISSILE","l":"Cannon"},{"c":"WEAPON_GUSENBERG","l":"Gusenberg Sweeper"},{"c":"WEAPON_TURRET_VALKYRIE","l":"Machine Gun"},{"c":"WEAPON_TURRET_BOXVILLE","l":"Machine Gun"},{"c":"WEAPON_AUTOSHOTGUN","l":"Sweeper Shotgun"},{"c":"WEAPON_STONE_HATCHET","l":"Stone Hatchet"},{"c":"WEAPON_ADVANCEDRIFLE","l":"Advanced Rifle"},{"c":"WEAPON_VINTAGEPISTOL","l":"Vintage Pistol"},{"c":"WEAPON_MARKSMANRIFLE","l":"Marksman Rifle"},{"c":"WEAPON_CERAMICPISTOL","l":"Ceramic Pistol"},{"c":"WEAPON_COMBATSHOTGUN","l":"Combat Shotgun"},{"c":"WEAPON_MILITARYRIFLE","l":"Military Rifle"},{"c":"WEAPON_TURRET_TECHNICAL","l":"Machine Gun"},{"c":"WEAPON_TURRET_INSURGENT","l":"Machine Gun"},{"c":"WEAPON_MACHINEPISTOL","l":"Machine Pistol"},{"c":"WEAPON_COMBATMG_MK2","l":"Combat MG Mk II"},{"c":"WEAPON_FERTILIZERCAN","l":"Fertilizer Can"},{"c":"WEAPON_TACTICALRIFLE","l":"Tactical Rifle"},{"c":"WEAPON_ARENA_MACHINE_GUN","l":"Machine Gun"},{"c":"WEAPON_RAYCARBINE","l":"Unholy Hellbringer"},{"c":"WEAPON_DAGGER","l":"Antique Cavalry Dagger"},{"c":"WEAPON_HAZARDCAN","l":"Hazardous Jerry Can"},{"c":"WEAPON_ASSAULTSHOTGUN","l":"Assault Shotgun"},{"c":"WEAPON_BULLPUPSHOTGUN","l":"Bullpup Shotgun"},{"c":"WEAPON_SPECIALCARBINE","l":"Special Carbine"},{"c":"WEAPON_SNSPISTOL_MK2","l":"SNS Pistol Mk II"},{"c":"WEAPON_HOMINGLAUNCHER","l":"Homing Launcher"},{"c":"WEAPON_MARKSMANPISTOL","l":"Marksman Pistol"},{"c":"WEAPON_DBSHOTGUN","l":"Double Barrel Shotgun"},{"c":"WEAPON_SAWNOFFSHOTGUN","l":"Sawed-Off Shotgun"},{"c":"WEAPON_GRENADELAUNCHER","l":"Grenade Launcher"},{"c":"WEAPON_NOSE_TURRET_VALKYRIE","l":"Machine Gun"},{"c":"WEAPON_REVOLVER_MK2","l":"Heavy Revolver Mk II"},{"c":"WEAPON_FIREEXTINGUISHER","l":"Fire Extinguisher"},{"c":"WEAPON_PUMPSHOTGUN_MK2","l":"Pump Shotgun Mk II"},{"c":"WEAPON_HEAVYSNIPER_MK2","l":"Heavy Sniper Mk II"},{"c":"WEAPON_DOUBLEACTION","l":"Double-Action Revolver"},{"c":"WEAPON_BULLPUPRIFLE_MK2","l":"Bullpup Rifle Mk II"},{"c":"WEAPON_ASSAULTRIFLE_MK2","l":"Assault Rifle Mk II"},{"c":"WEAPON_CARBINERIFLE_MK2","l":"Carbine Rifle Mk II"},{"c":"WEAPON_MARKSMANRIFLE_MK2","l":"Marksman Rifle Mk II"},{"c":"WEAPON_GRENADELAUNCHER_SMOKE","l":"Tear Gas Launcher"},{"c":"WEAPON_SPECIALCARBINE_MK2","l":"Special Carbine Mk II"},{"c":"WEAPON_COMPACTLAUNCHER","l":"Compact Grenade Launcher"},{"c":"WEAPON_PKM","l":"PKM"},{"c":"WEAPON_RPK","l":"RPK"},{"c":"WEAPON_FAL","l":"FAL"},{"c":"WEAPON_P90","l":"P90"},{"c":"WEAPON_MK18","l":"MK18"},{"c":"WEAPON_M4A1","l":"M4A1"},{"c":"WEAPON_G36C","l":"G36C"},{"c":"WEAPON_MP5","l":"MP5A5"},{"c":"WEAPON_MP5K","l":"MP5K"},{"c":"WEAPON_MP40","l":"MP40"},{"c":"WEAPON_AK47","l":"AK-47"},{"c":"WEAPON_AK74","l":"AK-74"},{"c":"WEAPON_TEC9","l":"TEC-9"},{"c":"WEAPON_ACE52","l":"ACE52"},{"c":"WEAPON_M1911","l":"M1911"},{"c":"WEAPON_L96A3","l":"L96A3"},{"c":"WEAPON_M16A4","l":"M16A4"},{"c":"WEAPON_M16A2","l":"M16A2"},{"c":"WEAPON_M14","l":"M14 EBR"},{"c":"WEAPON_BRICK","l":"Brick"},{"c":"WEAPON_SCARH","l":"Scar-H"},{"c":"WEAPON_UZI","l":"Mini UZI"},{"c":"WEAPON_AK74U","l":"AK-74U"},{"c":"WEAPON_MAC10","l":"MAC-10"},{"c":"WEAPON_MAC11","l":"MAC-11"},{"c":"WEAPON_FBIARB","l":"AR-15"},{"c":"WEAPON_G19","l":"Glock 19"},{"c":"WEAPON_UMP45","l":"UMP-45"},{"c":"WEAPON_BRICKT","l":"Brick"},{"c":"WEAPON_FN509","l":"FN 509"},{"c":"WEAPON_M9","l":"M9 Beretta"},{"c":"WEAPON_AXE","l":"Rusty Axe"},{"c":"WEAPON_TASER","l":"X26 Taser"},{"c":"WEAPON_P88","l":"P88 Compact"},{"c":"WEAPON_GLOCK17","l":"Glock 17"},{"c":"WEAPON_MOSIN","l":"Mosin Nagat"},{"c":"WEAPON_DRACO","l":"AKM-S Folded"},{"c":"WEAPON_PYTHON","l":"Colt Python"},{"c":"WEAPON_DEAGLE","l":"Desert Eagle"},{"c":"WEAPON_AKMS","l":"AKM-S Unfolded"},{"c":"WEAPON_BERETTA92","l":"Beretta 92"},{"c":"WEAPON_CANDYCANE","l":"Candy Cane"},{"c":"WEAPON_TOKAREV","l":"Tokarev TT-33"},{"c":"WEAPON_P226R","l":"Sig Sauer P226R"},{"c":"WEAPON_COLTJUNIOR","l":"Colt Junior"},{"c":"WEAPON_MOSSBERG590","l":"Mossberg 590"},{"c":"WEAPON_PYTHONSN","l":"Python Snubnose"},{"c":"WEAPON_SKORPIONEVO","l":"Skorpion EVO"},{"c":"WEAPON_SLEDGEHAMMER","l":"Sledgehammer"},{"c":"WEAPON_REMINGTON870","l":"Remington 870"},{"c":"WEAPON_HUNTINGRIFLE","l":"Hunting Rifle"},{"c":"WEAPON_PAINTBALLGUN","l":"Paintball Gun"},{"c":"WEAPON_STAMPEDRIFLE","l":"Shrewsbury AK"},{"c":"WEAPON_WINCHESTER","l":"Winchester Model 12"},{"c":"WEAPON_MODEL29","l":"Smith & Wesson Model 29"},{"c":"WEAPON_SAWNOFF","l":"Sawed-Off Remington M870"},{"c":"WEAPON_NONLETHALSHOTGUN","l":"Bean Bag Shotgun"}];
+const PV={"rod":90,"gps":150,"bong":30,"tv":1000,"binos":130,"phone":200,"radio":160,"scales":190,"camera":1500,"laptop":1500,"ammo_smg":760,"toolbag":1000,"ind_drill":640,"repairkit":220,"fur_coat":1000,"cut_ruby":2500,"ammo_rifle":960,"drill_bit":1050,"respirator":180,"uncut_ruby":300,"ammo_pistol":160,"car_battery":320,"phone_broken":60,"cable_roll":2500,"gold_chain":5000,"gold_bar_oz":800,"ornament_1":2500,"ornament_2":4000,"ammo_shotgun":220,"disk_cutter":1500,"cut_emerald":2500,"designer_top":800,"comic_book_1":750,"comic_book_2":750,"comic_book_3":750,"comic_book_4":750,"comic_book_5":750,"comic_book_6":750,"comic_book_7":750,"comic_book_8":750,"handheld_radio":50,"circuit_board":250,"gold_nugget":10000,"wedding_ring":7500,"uncut_emerald":300,"cut_sapphire":2500,"hunting_knife":225,"plasma_cutter":3000,"uncut_sapphire":300,"baseball_cards":600,"property_racks":2000,"property_table":4000,"property_vents":7500,"uncut_diamond":25000,"designer_watch":2500,"pearl_necklace":2000,"roulette_ball":75000,"designer_pants":1000,"designer_shoes":1200,"property_press":14000,"property_scales":3000,"designer_glasses":600,"signed_baseball":10000,"diamond_earrings":7000,"disk_cutter_broken":800,"cut_diamond_small":5000,"comic_book_mint_1":1500,"comic_book_mint_2":1500,"comic_book_mint_3":1500,"comic_book_mint_4":1500,"comic_book_mint_5":1500,"comic_book_mint_6":1500,"comic_book_mint_7":1500,"comic_book_mint_8":1500,"property_ind_light":4000,"scuba_gear_depleted":250,"uncut_diamond_smal;":500,"handheld_radio_broken":40,"property_generator":40000,"property_insulation":6000,"baseball_cards_signed":1200};
+const VRAW=[["BCSO Terminus","bcsoterminus","BCSO"],["Apache","ah64d","Heli"],["Deluxo","por","Sports"],["Boat Mobile","boatmobile","Boat"],["LSPD Rebla","lspdrebla2","LSPD"],["LSPD Komoda","lspdkomoda","LSPD"],["LSPD Buffalo","SWATBUZ","LSPD"],["XY10-R","10r24nbrt","Sports"],["Sahara Twin","atwin2023","Offroad"],["Dutch R","ksd","Sports"],["Charger 21","charger21","Muscle"],["Revulto","REV","Sports"],["BE63","sl63amg22","Luxury"],["R8 13","r8ppi","Sports"],["Skyline S30","s30","JDM"],["M2 23","23m2","Sports"],["Abby","acty","Van"],["EMS Heli","aw139","EMS"],["BMX","bmxsky","Bike"],["Buzzard","buzzard2","Heli"],["SWAT Buzzard","SWATBUZ2","LSPD"],["Pony","pony","Van"],["T250","08f250","Offroad"],["Hayley Davison Deathgrip","vrodft","Bike"],["Sultan Classic","sultan2","Sports"],["Range Rover Velar","velar","Luxury"],["Corsa","corsa","Sports"],["Cadillac CT5","ct5vbw22","Luxury"],["Lexus LC500","lc500","Sports"],["Golf 25","golf25r","Sports"],["Golf MK3","mk3vr6","JDM"],["M3 Touring","23touring","Sports"],["Ford GT 05","fordgt05","Sports"],["Sultan RS","sultanrs","Sports"],["Club","club","Sports"],["Retinue 2","retinue2","Classic"],["Draugur","draugur","Offroad"],["BCSO RAM","bcsoram","BCSO"],["BCSO Tahoe 21","bcso21tahoe","BCSO"],["BCSO Silverado","bcso23silv","BCSO"],["BCSO Blazer 23","bcso23blazer","BCSO"],["BCSO Camaro","bcsocamaro","BCSO"],["BCSO Tacoma","bcsotacoma","BCSO"],["BCSO CTSV Cadillac","bcsoctsv","BCSO"],["BCSO Oracle2","bcsooracle2","BCSO"],["10F Widebody","tenf2","Sports"],["Lynx MK1","lynxmk1","Sports"],["Event Little Vehicle","vbbpxxc","Event"],["LSPD Stinger","lspdstinger","LSPD"],["LSPD Raptor","lspdraptor","LSPD"],["LSPD Explorer K9","lspdk9exp","LSPD"],["LSPD Jackal","lspdjackal","LSPD"],["LSPD Exemplar","lspdexemplar","LSPD"],["LSPD Jester","lspdjester","LSPD"],["LSPD Schlagen","lspdschlagen","LSPD"],["LSPD Rebla","lspdrebla","LSPD"],["DOA Exemplar","doaexemplar","DOA"],["DOA Asterope","doaasterope","DOA"],["DOA Dubsta","doadubsta","DOA"],["DOA Ruiner","doaruiner","DOA"],["DOA Buffalo","doabuffalo","DOA"],["DOA Intruder","doaintruder","DOA"],["DOA Phoenix","doaphoenix","DOA"],["DOA Oracle2","doaoracle2","DOA"],["DOA Rancher XL","doarancherxl","DOA"],["FIB GLX Granger","fibglx","FIB"],["LSPD BCAT SWAT","lspdbcat","LSPD"],["KIA GT Stinger","kiagt","Sports"],["M3 G80","m3g80","Sports"],["M5 G90","m5g90","Sports"],["Lambo Countach 23","lpi8004","Sports"],["Jewel Quadra","gtam21","Sports"],["DMG L55","schlafer","Luxury"],["Calypso V12","cliov6","Sports"],["CT Cybertruck","CyberTruckV","Offroad"],["SR3 20","rs3s20","Sports"],["HZ24","nznismo24","JDM"],["EMS Ambu","ambo1","EMS"],["EMS Ambu 2","ambo2","EMS"],["EMS Ambu 3","ambo3","EMS"],["EMS Landstalker","emslandstalker","EMS"],["EMS Felon","emsfelon","EMS"],["EMS Scout","emsscout","EMS"],["EMS Buffalo","emsbuffalo4","EMS"],["EMS Caracara","emscaracara","EMS"],["Verlierer GT Drift","verlierergt","Sports"],["Harley Davison Soft","softdeluxe13","Bike"],["Hayley Davison Kings","kingsgv2","Bike"],["Jimmy","jimmy","Offroad"],["Hennesy Venom F5","venomf5","Sports"],["Hayley Davison Glide Road","rgxs250","Bike"],["Jubilee","jubilee","Classic"],["Chelengar","chall70","Muscle"],["Futo GTX","futo2","JDM"],["G6 Mesa","bsmesa","G6"],["G6 Pony","bspony","G6"],["G6 Frontier","bsseminolef","G6"],["G6 Surge","bssurge","G6"],["G6 Brickade","chfbrick","G6"],["G6 Buffalo","g6buffalo","G6"],["G6 Caddy","g6caddy","G6"],["G6 Perennial","g6perennial","G6"],["G6 Speedo","g6speedo","G6"],["G6 Executioner","LLexecutioner","G6"],["G6 Merit","llmerit","G6"],["G6 Stocker","llsecuricar","G6"],["G6 Steed","llsteed","G6"],["G6 3 Wheel","secpigeon","G6"],["G6 RCV","g6rcv","G6"],["CT5 VBW 22","22ct5vbw","Luxury"],["Divic EK8","FK8","JDM"],["TR Garis","xp210","Sports"],["H32 GTR","bnr32","JDM"],["Tennis MK7","golf75r","Sports"],["Ghire","vwghiac","Sports"],["F2000","gxap3","Sports"],["Mazda Miata","na6","JDM"],["NOESX 16 NSX","nc1","JDM"],["Maserati GT","maseratigt","Luxury"],["ALR","mbslr","Luxury"],["RS7 23 ABT","23rs7abt","Sports"],["RS7 23","23rs7","Sports"],["Hellaby GT","shelby20","Muscle"],["X6MF16","x6mf16","Luxury"],["Movitec","mlnovitec","Sports"],["Taxi","taxi2","Van"],["Speedo","nspeedo","Van"],["Mini SRT Kart","srtkart","Event"],["Zilvia S14","gxs14","JDM"],["Zilvia S13","nis13","JDM"],["Cullinan","cullinanbb","Luxury"],["911 GT3RS 22","pgt322","Sports"],["NOESX","hna2t","JDM"],["Divic EK9","EK9","JDM"],["JZR","mk2100","JDM"],["L63","e63sf","Luxury"],["Senna McLaren","sennasmso1","Sports"],["Cammy","cam08","Muscle"],["Deer TT","impalass","Classic"],["LFA","lfa","Sports"],["Qashqai","qashqai16","Offroad"],["Zupra","toysupmk4","JDM"],["EP540 Huracan","lhuracant","Sports"],["LSPD Durango","lspddurango","LSPD"],["LSPD Tahoe","lspdtahoe","LSPD"],["LSPD T250","lspdf250","LSPD"],["LSPD Hellcat","lspdhellcat","LSPD"],["LSPD CVPI","lspdcvpi","LSPD"],["LSPD Tahoe 08","lspd08tahoe","LSPD"],["LSPD Caprice","lspdcaprice","LSPD"],["LSPD Charger 14","lspd14charger","LSPD"],["LSPD FPIS","lspdfpis","LSPD"],["LSPD Charger 19","lspd19charger","LSPD"],["LSPD Explorer","lspdexp","LSPD"],["LSPD Silverado","lspdsilverado","LSPD"],["LSPD Dirtbike","lspdbike","LSPD"],["BCSO Mustang","ABSHEL","BCSO"],["DBX","dbx","Luxury"],["Focus RS","focusrs","Sports"],["GLE63","gle","Luxury"],["DUBYARX GX","gxwrx","Offroad"],["Ford Mustang Mach 1","mach1","Muscle"],["Subaru Impreza WTX","subisti08","Sports"],["VW Beetle","vwbeetlenaj","Classic"],["Sierra 21","21sierra","Offroad"],["Pulsar GTIR","nisgtir","JDM"],["Sunny","nissunny","JDM"],["Lexus IS300","is300","JDM"],["H33 GTR","r33","JDM"],["Ferrari Roma","roma20","Sports"],["A90 Zupra","tsgr20","JDM"],["Diver SCR","rsvr16","Sports"],["V4","v4","Bike"],["V4-SL","v4sl","Bike"],["V4-SP","v4sp","Bike"],["V4-R","v4r","Bike"],["V4-S","v4s","Bike"],["Solaris Polaris 22","polaris2022","Offroad"],["Brickade","brickade","Van"],["LS News Heli","newsheli2","Heli"],["Arrow Dart 68","68dart","Classic"],["1979 Chevy Camaro","z2879","Muscle"],["T150 F150 78","f15078","Classic"],["TNX","bgnx","Offroad"],["HAM 7000","10ram","Offroad"],["Hayley Davison Rorredor","corredor","Bike"],["Hayley Davison Carrier","soulcarrier","Bike"],["Hayley Davison Dragoon","dragoon","Bike"],["Hayley Davison Enforcer","enforcer","Bike"],["BCSO Tahoe 06","06tahoew","BCSO"],["BCSO CVPI 11","11cvpiw","BCSO"],["BCSO Caprice 13","13capricew","BCSO"],["BCSO Charger 14","14chargerw","BCSO"],["BCSO Explorer 16","16fpiuw","BCSO"],["BCSO Charger 18","18chargerw","BCSO"],["BCSO T150 18","18f150w","BCSO"],["BCSO Taurus 18","18taurusw","BCSO"],["BCSO Burban 18","18burbanw","BCSO"],["BCSO Tahoe 18","18tahoew","BCSO"],["LSPD Cavalcade","polcavalcade2","LSPD"],["LSPD Huntley","polhuntley","LSPD"],["LSPD Jackal 2","poljackal","LSPD"],["LSPD Oracle","poloracle2","LSPD"],["LSPD Phoenix","polphoenix","LSPD"],["LSPD Rancher","polrancher2","LSPD"],["LSPD Sultan","polsultan","LSPD"],["Taycan Turbo S","taycan","Sports"],["SR5-R","rs5r","Sports"],["Paris","13malibu","Classic"],["Landcruiser J79","landcruiser","Offroad"],["Austin Heeley 300","ah300","Classic"],["P45S","gxa45","Luxury"],["LSPD Charger","polcharger2","LSPD"],["Hayley Davison Hussein","hussar","Bike"],["Navaro","golf","Sports"],["RVO","cvo","Bike"],["Dirt","clay","Offroad"],["DLS63","cls2015","Luxury"],["Dodge Viper 08","vip8","Muscle"],["Shelby Cobra","cobra","Classic"],["R4 B8","s4","Sports"],["Vanish","ast","Sports"],["X50","f5095","Sports"],["Ice Van","icevan","Event"],["SRO8","RSQ8M","Luxury"],["SLS","slsamg","Sports"],["R Roadstar","tesroad20","Sports"],["Lambo Huracan Perf","18performante","Sports"],["Ferrari 512","512tr","Classic"],["Porsche 944","p944","Classic"],["Bucko","wildtrak","Offroad"],["M3 E36","m3e36","Sports"],["X12 TDF","tdf","Sports"],["SR6 20","rs6avant20","Sports"],["SWAT Heli","swathel","Heli"],["Event Egg Car","quadri","Event"],["Velociraptor 6x6","velociraptor","Offroad"],["V250","v250","Luxury"],["Urus","Urus","Offroad"],["SVJ","svj63","Sports"],["AL65","sl65bs","Luxury"],["ARX8","rx811","Sports"],["R-Pace","fpace2017","Offroad"],["911 Turbo S 21","turs21","Sports"],["DW Bison","BisonDW","Offroad"],["F22","F22A","Heli"],["FIB Granger","fibgrangerrto","FIB"],["FIB Granger Unmarked","umkgrangerrto","FIB"],["675XY Spoider","675ltsp","Sports"],["E30","m3e30","Classic"],["B8 I8","I8","Sports"],["GT3 RS","pgt3","Sports"],["X420","f430s","Sports"],["Lada","lada2107","Classic"],["Trackhawk","srt8","Offroad"],["Trackhawk Debaged","srt8b","Offroad"],["XL570","lx570","Offroad"],["Chevy Camaro SS 69","ss69","Muscle"],["TRX","trx","Offroad"],["Tahoe Civ","civtahoe","Other"],["ELS Singer","SingerDLS","Sports"],["Beetle","beetle74","Classic"],["Senna","senna","Sports"],["Tunk Tuk","tunak","Event"],["Jet Ski Trailer","portskitrailer","Boat"],["Vayrone","supersport","Sports"],["Y1 GTR","gtr96","JDM"],["Cayenne","cayenneturbo","Offroad"],["Gallardo","gallardop","Sports"],["Devil","demon","Muscle"],["Station","wagoneer91","Classic"],["X819","f812","Sports"],["Bentley CGTS","cgts","Luxury"],["El Jesse","elcamino70","Classic"],["Harley Davison XLCR","g_xlcr","Bike"],["Audi A4","aaq4","Sports"],["O8","q820","Luxury"],["Camario RL1","zl12017","Muscle"],["Lusy","gtc4","Sports"],["M3 F80","m3f80","Sports"],["TT63S GT63S","rmodgt63","Luxury"],["LSPD Scout Unmarked","umkscout","LSPD"],["LSPD PD17","pd17","LSPD"],["Porsche 992","992c","Sports"],["992 Droptop","992t","Sports"],["Michela Angelo SC","lp670sv","Sports"],["Evo Spoider","hevo","Sports"],["L63 18","e63s","Luxury"],["Aston Martin SuperLeg","superleggera","Sports"],["Stingray E8","c8","Muscle"],["Stingray E6 R06","C6Z06","Muscle"],["N8 Compizarre","bmwm8","Sports"],["Zilvia F15","silvias15","JDM"],["LSPD Bike","policeb1","LSPD"],["LSPD BF400","policeb2","LSPD"],["Jetski","portski","Boat"],["Ruiner Drift","ruinerdm","Classic"],["LSPD Buzzard","polbuz","LSPD"],["Event Shopping Cart","skart","Event"],["Range Rover ST","rrst","Offroad"],["Robin Reliant","robin","Event"],["N6 Z90","m5f90","Sports"],["Mavern","can","Sports"],["Nagara","agerars","Sports"],["Kuruma","nwkuruma","Sports"],["LSPD Felon Unmarked","policefelon","LSPD"],["Buffalo Hellhound","buffaloh","Muscle"],["Snowbike","snowbike","Bike"],["Saleen S7","ss7","Sports"],["Panamera 17","panamera17turbo","Luxury"],["Porsche 918","918","Sports"],["LS News Van","newsvan2","Van"],["Pizza Car","foodcar4","Event"],["Supra","grsupra","JDM"],["Yammi YZ250F","yz250f","Bike"],["Superkart","superkart","Bike"],["Millennial","millennial","Other"],["Honda 3000GT","3000gt","JDM"],["Honda 3000GTA","3000gta","JDM"],["NX450F","kx450f","Bike"],["Police Bike","policebike","LSPD"],["RS3 18","rs318","Sports"],["Yammi YZF R25","r25","Bike"],["AMG GTR Mansory","amggtsmansory","Sports"],["Continental","ben17","Luxury"],["Bentayga","bentaygast","Luxury"],["LSPD Coquette","polcoquette","LSPD"],["Sea Ray L650","yacht2","Boat"],["711 Turbo S","911turboS","Sports"],["360S","720s","Sports"],["DUBYARX STD","subwrx","Sports"],["A500","s500w222","Luxury"],["T150 Captur","f150","Offroad"],["E36 Drift","e36rb","Classic"],["C63 Droptop","mers63c","Luxury"],["Motocompo","motoc","Bike"],["Tesla X","teslax","Other"],["D63S","c63s","Luxury"],["Chevy Escalade","gmt900escalade","Luxury"],["Mustang 65","mustang65","Classic"],["Agusta","agusta","Bike"],["EMS Heli 2","polmav","EMS"],["SWAT Truck","riot","LSPD"],["LSPD Cruiser","police","LSPD"],["LSPD Explorer 2","POLEXPLORER","LSPD"],["LSPD Impala","POLIMPALA","LSPD"],["LSPD Interceptor","POLINTERCEPTOR","LSPD"],["LSPD Explorer 3","polexplorer2","LSPD"],["LSPD Tahoe 2","tahoe","LSPD"],["LSPD Charger 2","POLCHARGER","LSPD"],["Chevy SS","ChevySS","Muscle"],["FIB Bison","fibbison","FIB"],["FIB Dominator","fibdominator","FIB"],["FIB Baller","fibballer","FIB"],["FIB Fugitive","fibfugitive","FIB"],["Fire Truck","fire1","Other"],["LSPD Vic","polvic","LSPD"],["G6 Explorer","gruppe3","G6"],["G6 Charger","gruppe2","G6"],["G6 Crown Vic","gruppe1","G6"],["Challenger 16","16challenger","Muscle"],["Porsche 911R","p911r","Sports"],["DW Flatbed","flatbed3","Van"],["Spirit","rrphantom","Luxury"],["R8","arv10","Sports"],["Waythe","wraith","Luxury"],["Ferrari 488 GTB","488gtb","Sports"],["Lambo Huracan LP580","lp580","Sports"],["H35 GTR","gtr","JDM"],["Ferrari GTO XX","gtoxx","Sports"],["Opel Sierra","SIERRA","Classic"],["CBD","hcbr17","Bike"],["Harley Knucklehead","HDKNUCKLEHEAD","Bike"],["Zerox","aeroxr","Sports"],["Bel-Sky","belair","Classic"],["Model S","models","Other"],["Zupra 2","supra2","JDM"],["LAV4","rav4","Offroad"],["S600 W220","s600w220","Luxury"],["SR7","rs7","Sports"],["SR6","audirs6tk","Sports"],["T8","r8prior","Sports"],["Nissan Escape","pnismo","JDM"],["Huayra BC","bc","Sports"],["E1","p1","Sports"],["Transall","transalp","Bike"],["F63","g65amg","Luxury"],["M6","m6_coupe","Sports"],["M4 F82 HS","f82hs","Sports"],["M4 F82 LW","f82lw","Sports"],["M4 F82 4S","f824slw","Sports"],["M4 F82 Duke","f82duke","Sports"],["M4 F82 ST","f82st","Sports"],["M4 F82","f82","Sports"],["M3 E46","m3e46","Sports"],["Project 17","p7","Sports"],["TT86","gt86","JDM"],["T63 6x6","6x6","Offroad"],["N5 T60","m5e60","Sports"],["Motorhome","caravan","Van"],["Devil SC","500gtrlam","Sports"],["Crossout","cross","Other"],["N3 T92","bmwm3","Sports"],["EP 720-2 SC","sv","Sports"],["SR6 B1","c5rs6","Sports"],["R4","b5s4","Sports"],["Opel Adam","opeladam","Classic"],["I454","458","Sports"],["Nissan 180 SX","180sx","JDM"],["Python 99","99viper","Muscle"],["Charchar SRT","16charger","Muscle"],["Charchar R/T 1969","69charger","Muscle"],["370Z Ismo","370z","JDM"],["DMG GTR","amggtr","Sports"],["Boss 429","boss429","Muscle"],["Stingray E7","C7","Muscle"],["Verfasto","2019chiron","Sports"],["Divic","civic","JDM"],["D-Type 68","etype2","Classic"],["Devo 9","evo9","JDM"],["Devo 10","lanex400","JDM"],["Grand Tour","gt17","Sports"],["Maserati GHI","14ghibli","Luxury"],["Gouda","hemicuda","Muscle"],["La Purrari","aperta","Sports"],["Waythe 2","MGT","Luxury"],["Leaf","prius","Other"],["H34 GTR","Skyline","JDM"],["Diver SCR 2","rrab","Sports"],["ARX7","rx7tunable","JDM"],["Twig","twingo","Classic"],["Rumpo Utility","rumpo3","Van"],["Vacca","vacca","Sports"]];
+
+
+const ITEM_CATS=["All","Pawn Values","Ammo","Blueprints","Drinks","Drugs","Event & Misc","Fishing","Food","Heist","Loot Containers","Lumber","Medical","Mining","Property","Shrooms","Tools","Valuables","Weapon Mods","Weapon Parts","Weed"];
+const VEH_CATS=["All","LSPD","BCSO","EMS","DOA","FIB","G6","Sports","Muscle","JDM","Offroad","Luxury","Bike","Heli","Boat","Event","Van","Classic","Other"];
+
+const vehicles=VRAW.map((r,i)=>({id:i,name:r[0],code:r[1],cat:r[2]}));
+
+// ===== FIREBASE =====
+firebase.initializeApp({apiKey:"AIzaSyAqzUCHWGTCO7CIRiGldSnsfz5f0tzQ5V0",authDomain:"diamond-casino-tracker.firebaseapp.com",databaseURL:"https://diamond-casino-tracker-default-rtdb.firebaseio.com",projectId:"diamond-casino-tracker",storageBucket:"diamond-casino-tracker.firebasestorage.app",messagingSenderId:"973952156488",appId:"1:973952156488:web:a4729ae9f843ae941b297d"});
+const db=firebase.firestore();
+
+// ===== ACCESS CODE + NAME SYSTEM =====
+let accessCode='HLET2026';
+let userName=localStorage.getItem('et_username')||'';
+const accessCodeRef=db.collection('et_config').doc('access_code');
+
+accessCodeRef.onSnapshot(doc=>{
+  if(doc.exists){
+    accessCode=doc.data().code||'HLET2026';
+    const saved=localStorage.getItem('et_access_code');
+    if(saved&&saved!==accessCode){
+      localStorage.removeItem('et_access_code');
+      document.getElementById('main-app').style.display='none';
+      document.getElementById('login-gate').style.display='flex';
+      document.getElementById('gate-err').textContent='Access code has changed. Please re-enter.';
+    }
+  } else {
+    accessCodeRef.set({code:'HLET2026'});
+  }
+});
+
+function tryLogin(){
+  const input=document.getElementById('gate-code').value;
+  if(input===accessCode){
+    localStorage.setItem('et_access_code',input);
+    document.getElementById('login-gate').style.display='none';
+    if(!userName){
+      document.getElementById('name-gate').style.display='flex';
+      document.getElementById('name-input').focus();
+    } else { showApp(); }
+  } else {
+    document.getElementById('gate-err').textContent='WRONG CODE';
+  }
+}
+
+function setName(){
+  const n=document.getElementById('name-input').value.trim();
+  if(!n)return;
+  userName=n;
+  localStorage.setItem('et_username',n);
+  document.getElementById('name-gate').style.display='none';
+  showApp();
+}
+
+function showApp(){
+  document.getElementById('main-app').style.display='block';
+  const el=document.getElementById('nav-user');
+  el.innerHTML='<span style="color:var(--t2)">'+esc(userName)+'</span>'+
+    '<button class="btn-sm" onclick="changeName()" style="font-size:.64rem">Name</button>'+
+    '<button class="btn-sm" onclick="logout()" style="font-size:.64rem;border-color:var(--red);color:var(--red)">Logout</button>';
+}
+
+function changeName(){
+  const n=prompt('Enter new display name:',userName);
+  if(n&&n.trim()){userName=n.trim();localStorage.setItem('et_username',userName);showApp();toast('Name updated')}
+}
+
+function logout(){localStorage.removeItem('et_access_code');location.reload()}
+
+// ===== ADMIN SYSTEM =====
+const ADMIN_CODE='05211990';
+
+function checkAdmin(){
+  const input=document.getElementById('admin-code-input').value;
+  if(input===ADMIN_CODE){
+    document.getElementById('admin-code-input').value='';
+    document.getElementById('admin-err').textContent='';
+    closeModal('modal-admingate');
+    openModal('modal-changecode');
+  } else {
+    document.getElementById('admin-err').textContent='Wrong admin code';
+  }
+}
+
+// Keyboard shortcut: Ctrl+Shift+A opens admin gate
+document.addEventListener('keydown',function(e){
+  if(e.ctrlKey&&e.shiftKey&&e.key==='A'){
+    e.preventDefault();
+    document.getElementById('admin-code-input').value='';
+    document.getElementById('admin-err').textContent='';
+    openModal('modal-admingate');
+  }
+});
+
+function changeAccessCode(){
+  const old=document.getElementById('cc-old').value;
+  const nw=document.getElementById('cc-new').value;
+  const msg=document.getElementById('cc-msg');
+  if(old!==accessCode){msg.style.color='var(--red)';msg.textContent='Current code is wrong';return}
+  if(nw.length<3){msg.style.color='var(--red)';msg.textContent='Too short';return}
+  accessCodeRef.update({code:nw});
+  localStorage.setItem('et_access_code',nw);
+  msg.style.color='var(--green)';msg.textContent='Code updated!';
+  setTimeout(()=>{closeModal('modal-changecode');document.getElementById('cc-old').value='';document.getElementById('cc-new').value='';msg.textContent=''},1200);
+}
+
+function getUserName(){return userName||'Anonymous'}
+
+// Auto-login check
+(function(){
+  const saved=localStorage.getItem('et_access_code');
+  if(saved&&saved===accessCode){
+    document.getElementById('login-gate').style.display='none';
+    if(!userName){document.getElementById('name-gate').style.display='flex'}
+    else{showApp()}
+  }
+})()
+
+// ===== STATE =====
+let activeSection='items';
+let itemCat='All',vehCat='All';
+let itemFavs=new Set(JSON.parse(localStorage.getItem('et_item_favs')||'[]'));
+let vehFavs=new Set(JSON.parse(localStorage.getItem('et_veh_favs')||'[]'));
+let pendingListItem=null;
+let sharedLists={},activeListId=null,listSearchQ='';
+let candidates=[],questions=[],intStatusFilter='All',activeCandidateId=null,pendingVoteChoice=null;
+
+// Category overrides (synced via firestore)
+let itemCatOverrides={};
+let vehCatOverrides={};
+const catOverridesRef=db.collection('et_config').doc('cat_overrides');
+catOverridesRef.onSnapshot(doc=>{
+  if(doc.exists){
+    itemCatOverrides=doc.data().items||{};
+    vehCatOverrides=doc.data().vehicles||{};
+  }
+  renderItems();renderVehicles();
+});
+
+function saveItemCatOverride(code,newCat){
+  itemCatOverrides[code]=newCat;
+  catOverridesRef.set({items:itemCatOverrides,vehicles:vehCatOverrides},{merge:true});
+}
+function saveVehCatOverride(code,newCat){
+  vehCatOverrides[code]=newCat;
+  catOverridesRef.set({items:itemCatOverrides,vehicles:vehCatOverrides},{merge:true});
+}
+
+// Firestore refs
+const listsRef=db.collection('et_lists');
+const candidatesRef=db.collection('et_candidates');
+const questionsRef=db.collection('et_questions');
+
+// ===== NAV =====
+function switchSection(s){
+  activeSection=s;
+  document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
+  document.getElementById('sec-'+s).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(el=>el.classList.toggle('active',el.dataset.section===s));
+}
+
+// ===== TOAST =====
+let toastTimer;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),1500)}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function escAttr(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
+function copyCode(code,el){navigator.clipboard.writeText(code).then(()=>{if(el){el.classList.add('copied');setTimeout(()=>el.classList.remove('copied'),1200)}toast('COPIED: '+code)})}
+
+// ===== ITEMS =====
+function getItemCat(item){return itemCatOverrides[item.c]||item.t}
+
+function buildItemCats(){
+  let h='';
+  ITEM_CATS.forEach(c=>{
+    let cls='cat-btn';
+    if(c==='Pawn Values')cls+=' pawn-btn';
+    if(c==='Weapons')cls+=' wpn-btn';
+    if(itemCat===c)cls+=' active';
+    h+='<button class="'+cls+'" onclick="setItemCat(\''+escAttr(c)+'\')">'+esc(c)+'</button>';
+  });
+  document.getElementById('items-cats').innerHTML=h;
+}
+
+function setItemCat(c){itemCat=c;buildItemCats();renderItems()}
+
+function renderItems(){
+  const q=(document.getElementById('items-search').value||'').toLowerCase();
+  const wrap=document.getElementById('items-content');
+  document.getElementById('badge-items').textContent=RI.length;
+
+  // Special: Pawn Values view
+  if(itemCat==='Pawn Values'){
+    let data=RI.filter(i=>PV[i.c]!==undefined).map(i=>({c:i.c,l:i.l,t:getItemCat(i),pv:PV[i.c]}));
+    data.sort((a,b)=>b.pv-a.pv);
+    if(q)data=data.filter(i=>i.c.toLowerCase().includes(q)||i.l.toLowerCase().includes(q));
+    let h='<div style="padding:0 4px;font-size:.72rem;color:var(--t3);font-family:var(--mono);margin-bottom:10px">'+data.length+' pawnable items — sorted by value</div>';
+    h+='<div class="grid">';
+    data.forEach(i=>{h+=buildItemCard(i)});
+    h+='</div>';
+    wrap.innerHTML=h;return;
+  }
+
+  // Normal category
+  let data=RI.map(i=>({c:i.c,l:i.l,t:getItemCat(i)}));
+  if(itemCat!=='All')data=data.filter(i=>i.t===itemCat);
+  if(q)data=data.filter(i=>i.c.toLowerCase().includes(q)||i.l.toLowerCase().includes(q));
+
+  let h='<div class="grid">';
+  if(data.length===0){h+='<div class="empty-state"><span class="empty-big">NO RESULTS</span></div>'}
+  data.slice(0,200).forEach(i=>{h+=buildItemCard(i)});
+  h+='</div>';
+  if(data.length>200)h+='<div class="empty-state" style="padding:16px">Showing 200 of '+data.length+' — refine your search</div>';
+  wrap.innerHTML=h;
+}
+
+function buildItemCard(i){
+  const isFav=itemFavs.has(i.c);
+  const pawn=PV[i.c];
+  const realCats=["Ammo","Blueprints","Drinks","Drugs","Event & Misc","Fishing","Food","Heist","Loot Containers","Lumber","Medical","Mining","Property","Shrooms","Tools","Valuables","Weapon Mods","Weapon Parts","Weed"];
+  let h='<div class="card" onclick="copyCode(\''+escAttr(i.c)+'\',this)">';
+  h+='<div class="card-top"><div class="card-name">'+esc(i.l)+'</div>';
+  h+='<button class="card-fav'+(isFav?' active':'')+'" onclick="event.stopPropagation();toggleItemFav(\''+escAttr(i.c)+'\')">&#11088;</button></div>';
+  h+='<div class="card-code">'+esc(i.c)+'</div>';
+  h+='<div class="card-bottom">';
+  h+='<select class="cat-edit" onclick="event.stopPropagation()" onchange="saveItemCatOverride(\''+escAttr(i.c)+'\',this.value)">';
+  realCats.forEach(c=>{h+='<option'+(i.t===c?' selected':'')+'>'+esc(c)+'</option>'});
+  h+='</select>';
+  if(pawn)h+='<span class="pawn-val">$'+pawn.toLocaleString()+'</span>';
+  h+='<div class="card-actions"><button class="btn-sm" onclick="event.stopPropagation();openAddToList(\''+escAttr(i.c)+'\',\''+escAttr(i.l)+'\',\'item\')">+ List</button></div>';
+  h+='</div></div>';
+  return h;
+}
+
+function toggleItemFav(code){
+  itemFavs.has(code)?itemFavs.delete(code):itemFavs.add(code);
+  localStorage.setItem('et_item_favs',JSON.stringify([...itemFavs]));
+  renderItems();
+}
+
+// ===== WEAPONS (own section) =====
+const WPN_CATS=["All","Pistols","SMGs","Rifles","Shotguns","Melee","Heavy","Throwables","Other"];
+let wpnCat='All';
+
+function classifyWeapon(code,label){
+  const c=code.toUpperCase();const l=label.toLowerCase();
+  if(l.includes('pistol')||l.includes('revolver')||c.includes('PISTOL')||c.includes('REVOLVER')||c.includes('DOUBLEACTION')||l.includes('five seven')||l.includes('glock')||l.includes('m1911')||l.includes('fn 509')||l.includes('beretta')||l.includes('desert eagle')||l.includes('tokarev')||l.includes('colt junior')||l.includes('p88')||l.includes('p226')||l.includes('python')||c.includes('DEAGLE')||c.includes('PYTHON')||c.includes('FN509')||c.includes('G19')||c.includes('M9')||c.includes('P88')||c.includes('FIVESEVEN')||c.includes('M1911')||c.includes('COLTJUNIOR')||c.includes('TOKAREV')||c.includes('BERETTA')||c.includes('MODEL29')||c.includes('PYTHONSN'))return 'Pistols';
+  if(l.includes('smg')||l.includes('pdw')||l.includes('micro')||l.includes('mini smg')||l.includes('machine pistol')||l.includes('gusenberg')||l.includes('mp5')||l.includes('mp40')||l.includes('mac-')||l.includes('uzi')||l.includes('tec-9')||l.includes('ump')||l.includes('skorpion')||l.includes('p90')||c.includes('SMG')||c.includes('COMBATPDW')||c.includes('ASSAULTSMG')||c.includes('MACHINEPISTOL')||c.includes('GUSENBERG')||c.includes('MINISMG')||c.includes('MP5')||c.includes('MP40')||c.includes('MAC1')||c.includes('UZI')||c.includes('TEC9')||c.includes('UMP45')||c.includes('SKORPION')||c.includes('P90')||c.includes('DRACO'))return 'SMGs';
+  if(l.includes('rifle')||l.includes('carbine')||l.includes('ak-')||l.includes('m4a1')||l.includes('m16')||l.includes('fal')||l.includes('g36')||l.includes('scar')||l.includes('mk18')||l.includes('ar-15')||l.includes('shrewsbury ak')||l.includes('rpk')||l.includes('pkm')||c.includes('RIFLE')||c.includes('CARBINE')||c.includes('AK47')||c.includes('AK74')||c.includes('M4A1')||c.includes('M16')||c.includes('FAL')||c.includes('G36')||c.includes('MK18')||c.includes('SCARH')||c.includes('FBIARB')||c.includes('ACE52')||c.includes('RPK')||c.includes('PKM')||c.includes('STAMPEDRIFLE')||c.includes('M14'))return 'Rifles';
+  if(l.includes('shotgun')||l.includes('mossberg')||l.includes('remington')||l.includes('winchester')||l.includes('sawed-off')||c.includes('SHOTGUN')||c.includes('MOSSBERG')||c.includes('REMINGTON')||c.includes('WINCHESTER')||c.includes('SAWNOFF')||c.includes('DBSHOTGUN'))return 'Shotguns';
+  if(l.includes('sniper')||l.includes('marksman')||l.includes('l96')||l.includes('mosin')||l.includes('hunting rifle')||c.includes('SNIPER')||c.includes('MARKSMAN')||c.includes('L96')||c.includes('MOSIN')||c.includes('HUNTINGRIFLE')||c.includes('REMOTESNIPER'))return 'Rifles';
+  if(l.includes('knife')||l.includes('bat')||l.includes('hammer')||l.includes('hatchet')||l.includes('machete')||l.includes('axe')||l.includes('dagger')||l.includes('crowbar')||l.includes('wrench')||l.includes('pool cue')||l.includes('golf club')||l.includes('nightstick')||l.includes('flashlight')||l.includes('switchblade')||l.includes('knuckle')||l.includes('bottle')||l.includes('brick')||l.includes('candy cane')||l.includes('sledgehammer')||c.includes('KNIFE')||c.includes('BAT')||c.includes('HAMMER')||c.includes('HATCHET')||c.includes('MACHETE')||c.includes('AXE')||c.includes('DAGGER')||c.includes('CROWBAR')||c.includes('WRENCH')||c.includes('POOLCUE')||c.includes('GOLFCLUB')||c.includes('NIGHTSTICK')||c.includes('FLASHLIGHT')||c.includes('SWITCHBLADE')||c.includes('KNUCKLE')||c.includes('BOTTLE')||c.includes('BRICK')||c.includes('CANDYCANE')||c.includes('SLEDGEHAMMER')||c.includes('BATTLEAXE')||c.includes('STONE_HATCHET'))return 'Melee';
+  if(l.includes('rpg')||l.includes('minigun')||l.includes('grenade launcher')||l.includes('homing')||l.includes('railgun')||l.includes('widowmaker')||l.includes('hellbringer')||l.includes('up-n-atomizer')||l.includes('emp')||l.includes('combat mg')||l.includes('mg')||l.includes('firework launcher')||l.includes('compact grenade')||c.includes('RPG')||c.includes('MINIGUN')||c.includes('GRENADELAUNCHER')||c.includes('HOMING')||c.includes('RAILGUN')||c.includes('RAYMINIGUN')||c.includes('RAYCARBINE')||c.includes('RAYPISTOL')||c.includes('EMPLAUNCHER')||c.includes('COMBATMG')||c.includes('WEAPON_MG')||c.includes('FIREWORK')||c.includes('COMPACTLAUNCHER')||c.includes('STINGER'))return 'Heavy';
+  if(l.includes('grenade')||l.includes('molotov')||l.includes('sticky')||l.includes('pipe bomb')||l.includes('proximity')||l.includes('tear gas')||l.includes('snowball')||l.includes('ball')||l.includes('bz gas')||l.includes('flare')||c.includes('GRENADE')||c.includes('MOLOTOV')||c.includes('STICKYBOMB')||c.includes('PIPEBOMB')||c.includes('PROXMINE')||c.includes('SMOKEGRENADE')||c.includes('SNOWBALL')||c.includes('BALL')||c.includes('BZGAS')||c.includes('FLARE'))return 'Throwables';
+  return 'Other';
+}
+
+function buildWpnCats(){
+  let h='';
+  WPN_CATS.forEach(c=>{
+    let cls='cat-btn';
+    if(wpnCat===c)cls+=' active';
+    h+='<button class="'+cls+'" onclick="setWpnCat(\''+c+'\')">'+c+'</button>';
+  });
+  document.getElementById('wpn-cats').innerHTML=h;
+}
+function setWpnCat(c){wpnCat=c;buildWpnCats();renderWeapons()}
+
+function renderWeapons(){
+  const q=(document.getElementById('wpn-search').value||'').toLowerCase();
+  document.getElementById('badge-weapons').textContent=RW.length;
+  let data=RW.map(w=>({c:w.c,l:w.l,cat:classifyWeapon(w.c,w.l)}));
+  if(wpnCat!=='All')data=data.filter(i=>i.cat===wpnCat);
+  if(q)data=data.filter(i=>i.c.toLowerCase().includes(q)||i.l.toLowerCase().includes(q));
+  let h='';
+  if(data.length===0){h='<div class="empty-state"><span class="empty-big">NO RESULTS</span></div>'}
+  else{data.forEach(i=>{
+    h+='<div class="card" onclick="copyCode(\''+escAttr(i.c)+'\',this)"><div class="card-top"><div class="card-name">'+esc(i.l)+'</div></div><div class="card-code">'+esc(i.c)+'</div><div class="card-bottom"><span class="cat-pill" style="color:var(--red)">'+esc(i.cat)+'</span>';
+    h+='<div class="card-actions"><button class="btn-sm" onclick="event.stopPropagation();openAddToList(\''+escAttr(i.c)+'\',\''+escAttr(i.l)+'\',\'weapon\')">+ List</button></div>';
+    h+='</div></div>';
+  })}
+  document.getElementById('wpn-grid').innerHTML=h;
+}
+
+// ===== FAVORITES (own section) =====
+let customFavs=JSON.parse(localStorage.getItem('et_custom_favs')||'[]');
+
+function renderFavorites(){
+  const q=(document.getElementById('fav-search').value||'').toLowerCase();
+  const wrap=document.getElementById('fav-content');
+
+  // Gather favorited items
+  let favItems=RI.filter(i=>itemFavs.has(i.c)).map(i=>({c:i.c,l:i.l,t:getItemCat(i),src:'item'}));
+  // Gather favorited vehicles
+  let favVehs=vehicles.filter(v=>vehFavs.has(v.code)).map(v=>({c:v.code,l:v.name,t:getVehCat(v),src:'vehicle'}));
+  // Custom entries
+  let favCustom=customFavs.map(f=>({c:f.code,l:f.name,t:f.type,src:'custom'}));
+
+  if(q){
+    favItems=favItems.filter(i=>i.c.toLowerCase().includes(q)||i.l.toLowerCase().includes(q));
+    favVehs=favVehs.filter(i=>i.c.toLowerCase().includes(q)||i.l.toLowerCase().includes(q));
+    favCustom=favCustom.filter(i=>i.c.toLowerCase().includes(q)||i.l.toLowerCase().includes(q));
+  }
+
+  const total=favItems.length+favVehs.length+favCustom.length;
+  document.getElementById('badge-favorites').textContent=total;
+
+  if(total===0){
+    wrap.innerHTML='<div class="empty-state"><span class="empty-big">'+(q?'NO MATCHES':'NO FAVORITES YET')+'</span><span style="font-size:.8rem">Star items or vehicles, or add custom entries</span></div>';
+    return;
+  }
+
+  let h='';
+
+  // Items section
+  if(favItems.length>0){
+    h+='<div style="font-size:.72rem;letter-spacing:2px;color:var(--accent);text-transform:uppercase;font-weight:600;margin-bottom:10px;margin-top:8px">Favorited Items ('+favItems.length+')</div>';
+    h+='<div class="grid" style="margin-bottom:24px">';
+    favItems.forEach(i=>{
+      const pawn=PV[i.c];
+      h+='<div class="card" onclick="copyCode(\''+escAttr(i.c)+'\',this)">';
+      h+='<div class="card-top"><div class="card-name">'+esc(i.l)+'</div>';
+      h+='<button class="card-fav active" onclick="event.stopPropagation();toggleItemFav(\''+escAttr(i.c)+'\');renderFavorites()">&#11088;</button></div>';
+      h+='<div class="card-code">'+esc(i.c)+'</div>';
+      h+='<div class="card-bottom"><span class="cat-pill">'+esc(i.t)+'</span>';
+      if(pawn)h+='<span class="pawn-val">$'+pawn.toLocaleString()+'</span>';
+      h+='<div class="card-actions"><button class="btn-sm" onclick="event.stopPropagation();openAddToList(\''+escAttr(i.c)+'\',\''+escAttr(i.l)+'\',\'item\')">+ List</button></div>';
+      h+='</div></div>';
+    });
+    h+='</div>';
+  }
+
+  // Vehicles section
+  if(favVehs.length>0){
+    h+='<div style="font-size:.72rem;letter-spacing:2px;color:var(--accent);text-transform:uppercase;font-weight:600;margin-bottom:10px;margin-top:8px">Favorited Vehicles ('+favVehs.length+')</div>';
+    h+='<div class="grid" style="margin-bottom:24px">';
+    favVehs.forEach(i=>{
+      h+='<div class="card" onclick="copyCode(\''+escAttr(i.c)+'\',this)">';
+      h+='<div class="card-top"><div class="card-name">'+esc(i.l)+'</div>';
+      h+='<button class="card-fav active" onclick="event.stopPropagation();toggleVehFav(\''+escAttr(i.c)+'\');renderFavorites()">&#11088;</button></div>';
+      h+='<div class="card-code">'+esc(i.c)+'</div>';
+      h+='<div class="card-bottom"><span class="cat-pill">'+esc(i.t)+'</span>';
+      h+='<div class="card-actions"><button class="btn-sm" onclick="event.stopPropagation();openAddToList(\''+escAttr(i.c)+'\',\''+escAttr(i.l)+'\',\'vehicle\')">+ List</button></div>';
+      h+='</div></div>';
+    });
+    h+='</div>';
+  }
+
+  // Custom entries section
+  if(favCustom.length>0){
+    h+='<div style="font-size:.72rem;letter-spacing:2px;color:var(--accent);text-transform:uppercase;font-weight:600;margin-bottom:10px;margin-top:8px">Custom Entries ('+favCustom.length+')</div>';
+    h+='<div class="grid" style="margin-bottom:24px">';
+    favCustom.forEach(i=>{
+      h+='<div class="card" onclick="copyCode(\''+escAttr(i.c)+'\',this)">';
+      h+='<div class="card-top"><div class="card-name">'+esc(i.l)+'</div>';
+      h+='<button class="card-fav active" onclick="event.stopPropagation();removeCustomFav(\''+escAttr(i.c)+'\')">&#11088;</button></div>';
+      h+='<div class="card-code">'+esc(i.c)+'</div>';
+      h+='<div class="card-bottom"><span class="cat-pill">'+esc(i.t)+'</span>';
+      h+='<div class="card-actions"><button class="btn-sm" onclick="event.stopPropagation();openAddToList(\''+escAttr(i.c)+'\',\''+escAttr(i.l)+'\',\''+escAttr(i.t)+'\')">+ List</button></div>';
+      h+='</div></div>';
+    });
+    h+='</div>';
+  }
+
+  wrap.innerHTML=h;
+}
+
+function addCustomFav(){
+  const name=document.getElementById('cf-name').value.trim();
+  const code=document.getElementById('cf-code').value.trim();
+  const type=document.getElementById('cf-type').value;
+  if(!name||!code){toast('Name and code are required');return}
+  if(customFavs.find(f=>f.code===code)){toast('Already exists');closeModal('modal-customfav');return}
+  customFavs.push({name,code,type});
+  localStorage.setItem('et_custom_favs',JSON.stringify(customFavs));
+  document.getElementById('cf-name').value='';
+  document.getElementById('cf-code').value='';
+  closeModal('modal-customfav');
+  renderFavorites();
+  toast('Custom entry added');
+}
+
+function removeCustomFav(code){
+  customFavs=customFavs.filter(f=>f.code!==code);
+  localStorage.setItem('et_custom_favs',JSON.stringify(customFavs));
+  renderFavorites();
+}
+
+// ===== VEHICLES =====
+function getVehCat(v){return vehCatOverrides[v.code]||v.cat}
+
+function buildVehCats(){
+  let h='';
+  VEH_CATS.forEach(c=>{
+    let cls='cat-btn';
+    if(vehCat===c)cls+=' active';
+    h+='<button class="'+cls+'" onclick="setVehCat(\''+c+'\')">'+c+'</button>';
+  });
+  document.getElementById('veh-cats').innerHTML=h;
+}
+function setVehCat(c){vehCat=c;buildVehCats();renderVehicles()}
+
+function renderVehicles(){
+  const q=(document.getElementById('veh-search').value||'').toLowerCase();
+  document.getElementById('badge-vehicles').textContent=vehicles.length;
+  let data=vehicles.map(v=>({...v,cat:getVehCat(v)}));
+
+  if(vehCat!=='All'){
+    data=data.filter(v=>v.cat===vehCat);
+  }
+  if(q)data=data.filter(v=>v.name.toLowerCase().includes(q)||v.code.toLowerCase().includes(q));
+
+  const realVehCats=["LSPD","BCSO","EMS","DOA","FIB","G6","Sports","Muscle","JDM","Offroad","Luxury","Bike","Heli","Boat","Event","Van","Classic","Other"];
+  let h='';
+  if(data.length===0){
+    h='<div class="empty-state"><span class="empty-big">NO RESULTS</span></div>';
+  } else {
+    data.forEach(v=>{
+      const isFav=vehFavs.has(v.code);
+      h+='<div class="card" onclick="copyCode(\''+escAttr(v.code)+'\',this)">';
+      h+='<div class="card-top"><div class="card-name">'+esc(v.name)+'</div>';
+      h+='<button class="card-fav'+(isFav?' active':'')+'" onclick="event.stopPropagation();toggleVehFav(\''+escAttr(v.code)+'\')">&#11088;</button></div>';
+      h+='<div class="card-code">'+esc(v.code)+'</div>';
+      h+='<div class="card-bottom">';
+      h+='<select class="cat-edit" onclick="event.stopPropagation()" onchange="saveVehCatOverride(\''+escAttr(v.code)+'\',this.value)">';
+      realVehCats.forEach(c=>{h+='<option'+(v.cat===c?' selected':'')+'>'+esc(c)+'</option>'});
+      h+='</select>';
+      h+='<div class="card-actions"><button class="btn-sm" onclick="event.stopPropagation();openAddToList(\''+escAttr(v.code)+'\',\''+escAttr(v.name)+'\',\'vehicle\')">+ List</button></div>';
+      h+='</div></div>';
+    });
+  }
+  document.getElementById('veh-grid').innerHTML=h;
+}
+
+function toggleVehFav(code){
+  vehFavs.has(code)?vehFavs.delete(code):vehFavs.add(code);
+  localStorage.setItem('et_veh_favs',JSON.stringify([...vehFavs]));
+  renderVehicles();
+}
+
+// ===== SHARED LISTS =====
+listsRef.orderBy('created').onSnapshot(snap=>{
+  sharedLists={};
+  snap.forEach(doc=>{sharedLists[doc.id]={...doc.data(),id:doc.id}});
+  document.getElementById('badge-lists').textContent=Object.keys(sharedLists).length;
+  renderListsSidebar();
+  if(activeListId&&sharedLists[activeListId])renderListContent();
+});
+
+function createList(){
+  const name=document.getElementById('input-newlist').value.trim();
+  if(!name)return;
+  listsRef.add({name,items:[],created:firebase.firestore.FieldValue.serverTimestamp(),createdBy:getUserName()});
+  document.getElementById('input-newlist').value='';
+  closeModal('modal-newlist');
+}
+function deleteList(id){
+  if(!confirm('Delete this list?'))return;
+  if(activeListId===id){activeListId=null;renderListContent()}
+  listsRef.doc(id).delete();
+}
+function clearList(){
+  if(!activeListId)return;
+  if(!confirm('Remove all items from this list?'))return;
+  listsRef.doc(activeListId).update({items:[]});
+}
+function selectList(id){activeListId=id;listSearchQ='';renderListsSidebar();renderListContent()}
+
+function renderListsSidebar(){
+  const keys=Object.keys(sharedLists);
+  let h='';
+  if(keys.length===0){h='<div style="padding:18px;color:var(--t3);font-size:.8rem;text-align:center">No lists yet</div>'}
+  else{keys.forEach(id=>{
+    const l=sharedLists[id];const active=activeListId===id;
+    h+='<div class="list-item'+(active?' active':'')+'" onclick="selectList(\''+id+'\')"><span class="list-item-name">'+esc(l.name)+'</span><span class="list-item-count">'+(l.items||[]).length+'</span><button class="list-item-del" onclick="event.stopPropagation();deleteList(\''+id+'\')">\u2715</button></div>';
+  })}
+  document.getElementById('lists-sidebar-items').innerHTML=h;
+}
+
+function renderListContent(){
+  const el=document.getElementById('lists-content');
+  if(!activeListId||!sharedLists[activeListId]){el.className='list-empty';el.innerHTML='<span class="empty-big">NO LIST SELECTED</span><span style="font-size:.8rem">Create or select a list</span>';return}
+  el.className='list-content';
+  const l=sharedLists[activeListId];
+  let items=l.items||[];
+  const sq=listSearchQ.toLowerCase();
+  if(sq)items=items.filter(i=>i.code.toLowerCase().includes(sq)||i.name.toLowerCase().includes(sq));
+
+  let h='<div class="list-header"><div><h2>'+esc(l.name)+'</h2>';
+  h+='<div class="list-meta">'+(l.items||[]).length+' item'+((l.items||[]).length!==1?'s':'');
+  if(l.createdBy)h+=' &middot; created by '+esc(l.createdBy);
+  h+='</div></div>';
+  h+='<div class="list-header-actions">';
+  h+='<input class="list-search" placeholder="Search list..." value="'+esc(listSearchQ)+'" oninput="listSearchQ=this.value;renderListContent()">';
+  h+='<button class="btn-sm" onclick="copyAllFromList()" title="Copy all codes">Copy All</button>';
+  h+='<button class="btn-danger" onclick="clearList()" style="font-size:.68rem;padding:5px 10px">Clear</button>';
+  h+='</div></div>';
+
+  if(items.length===0){
+    h+='<div class="empty-state"><span class="empty-big">'+(sq?'NO MATCHES':'EMPTY LIST')+'</span></div>';
+  } else {
+    h+='<div class="grid">';
+    items.forEach((it,idx)=>{
+      h+='<div class="card" onclick="copyCode(\''+escAttr(it.code)+'\',this)"><div class="card-top"><div class="card-name">'+esc(it.name)+'</div></div><div class="card-code">'+esc(it.code)+'</div><div class="card-bottom"><span class="cat-pill">'+esc(it.type)+'</span>';
+      if(it.addedBy)h+='<span class="list-added-by">'+esc(it.addedBy)+'</span>';
+      h+='<button class="btn-sm" style="border-color:var(--red);color:var(--red)" onclick="event.stopPropagation();removeFromList(\''+escAttr(it.code)+'\')">Remove</button></div></div>';
+    });
+    h+='</div>';
+  }
+  el.innerHTML=h;
+}
+
+function copyAllFromList(){
+  if(!activeListId||!sharedLists[activeListId])return;
+  const items=sharedLists[activeListId].items||[];
+  if(items.length===0){toast('List is empty');return}
+  const text=items.map(i=>i.code).join('\n');
+  navigator.clipboard.writeText(text).then(()=>toast('Copied '+items.length+' codes'));
+}
+
+function openAddToList(code,name,type){
+  pendingListItem={code,name,type};
+  const keys=Object.keys(sharedLists);
+  let h='';
+  if(keys.length===0){h='<div style="color:var(--t3);font-size:.83rem;padding:8px">No lists yet — go to Lists tab to create one.</div>'}
+  else{keys.forEach(id=>{
+    const l=sharedLists[id];
+    h+='<div class="list-pick-item" onclick="addToList(\''+id+'\')"><span>'+esc(l.name)+'</span><span style="font-size:.66rem;color:var(--t3);font-family:var(--mono)">'+(l.items||[]).length+'</span></div>';
+  })}
+  document.getElementById('list-picker-items').innerHTML=h;
+  openModal('modal-addtolist');
+}
+
+function addToList(listId){
+  if(!pendingListItem)return;
+  const l=sharedLists[listId];const items=[...(l.items||[])];
+  if(items.find(i=>i.code===pendingListItem.code)){toast('Already in list');closeModal('modal-addtolist');return}
+  items.push({...pendingListItem,addedBy:getUserName()});
+  listsRef.doc(listId).update({items});
+  toast('Added to '+l.name);closeModal('modal-addtolist');pendingListItem=null;
+}
+
+function removeFromList(code){
+  if(!activeListId)return;
+  const items=(sharedLists[activeListId].items||[]).filter(i=>i.code!==code);
+  listsRef.doc(activeListId).update({items});
+}
+
+// ===== INTERVIEWS =====
+questionsRef.doc('template').onSnapshot(doc=>{
+  if(doc.exists){questions=doc.data().list||[]}
+  else{
+    questions=["Tell me about one of your favorite moments here in the city.","Have you worked anywhere else in Los Santos? How did that prepare you for working here?","How do you typically handle conflict between you and another person?","Why did you apply to the Events Team?","What kind of events would you like to see on the server?","Describe a situation where you had to think on your feet."];
+    questionsRef.doc('template').set({list:questions});
+  }
+  renderQuestionEditor();
+  if(activeCandidateId)renderIntDetail();
+});
+
+function renderQuestionEditor(){
+  let h='';
+  questions.forEach((q,i)=>{
+    h+='<div class="q-editor-row"><span class="q-num">Q'+(i+1)+'</span><input value="'+esc(q)+'" onchange="updateQuestion('+i+',this.value)"><button class="q-del-btn" onclick="deleteQuestion('+i+')">\u2715</button></div>';
+  });
+  document.getElementById('q-editor-list').innerHTML=h;
+}
+function updateQuestion(idx,val){questions[idx]=val;questionsRef.doc('template').update({list:questions})}
+function deleteQuestion(idx){questions.splice(idx,1);questionsRef.doc('template').update({list:questions})}
+function addQuestion(){const inp=document.getElementById('q-new-input');const v=inp.value.trim();if(!v)return;questions.push(v);questionsRef.doc('template').update({list:questions});inp.value=''}
+
+candidatesRef.orderBy('created','desc').onSnapshot(snap=>{
+  candidates=[];snap.forEach(doc=>{candidates.push({...doc.data(),id:doc.id})});
+  document.getElementById('badge-interviews').textContent=candidates.length;
+  renderIntSidebar();
+  if(activeCandidateId)renderIntDetail();
+});
+
+function createCandidate(){
+  const name=document.getElementById('cand-name').value.trim();
+  const discord=document.getElementById('cand-discord').value.trim();
+  const steam=document.getElementById('cand-steam').value.trim();
+  const character=document.getElementById('cand-character').value.trim();
+  if(!name){toast('Name is required');return}
+  candidatesRef.add({name,discord,steam,character,status:'Awaiting',answers:{},interviewDate:'',votes:[],created:firebase.firestore.FieldValue.serverTimestamp(),addedBy:getUserName()});
+  ['cand-name','cand-discord','cand-steam','cand-character'].forEach(id=>document.getElementById(id).value='');
+  closeModal('modal-newcandidate');toast('Candidate added');
+}
+
+function buildIntFilters(){
+  const statuses=['All','Awaiting','Interviewed','Accepted','Denied'];
+  let h='';statuses.forEach(s=>{h+='<button class="status-btn'+(intStatusFilter===s?' active':'')+'" data-s="'+s+'" onclick="setIntFilter(\''+s+'\')">'+s+'</button>'});
+  document.getElementById('int-filters').innerHTML=h;
+}
+function setIntFilter(s){intStatusFilter=s;buildIntFilters();renderIntSidebar()}
+
+function renderIntSidebar(){
+  buildIntFilters();
+  let filtered=candidates;
+  if(intStatusFilter!=='All')filtered=filtered.filter(c=>c.status===intStatusFilter);
+  let h='';
+  if(filtered.length===0){h='<div style="padding:18px;color:var(--t3);font-size:.8rem;text-align:center">No candidates</div>'}
+  else{filtered.forEach(c=>{
+    const active=activeCandidateId===c.id;
+    h+='<div class="int-card'+(active?' active':'')+'" onclick="selectCandidate(\''+c.id+'\')"><div class="int-card-name">'+esc(c.name)+'</div><div class="int-card-meta">'+esc(c.discord||'No Discord')+'</div>';
+    if(c.interviewDate)h+='<div class="int-card-date">Interview: '+esc(c.interviewDate)+'</div>';
+    h+='<span class="int-card-status" data-s="'+c.status+'">'+c.status+'</span></div>';
+  })}
+  document.getElementById('int-cards').innerHTML=h;
+}
+
+function selectCandidate(id){activeCandidateId=id;renderIntSidebar();renderIntDetail()}
+
+function renderIntDetail(){
+  const el=document.getElementById('int-detail');
+  const c=candidates.find(x=>x.id===activeCandidateId);
+  if(!c){el.className='int-detail-empty';el.innerHTML='Select a candidate';return}
+  el.className='int-detail';
+
+  let h='<div class="int-detail-header"><div><h2>'+esc(c.name)+'</h2></div><div style="display:flex;gap:6px;align-items:center">';
+  h+='<select class="status-select" onchange="updateCandStatus(\''+c.id+'\',this.value)">';
+  ['Awaiting','Interviewed','Accepted','Denied'].forEach(s=>{h+='<option'+(c.status===s?' selected':'')+'>'+s+'</option>'});
+  h+='</select>';
+  h+='<button class="btn-sm" style="border-color:var(--red);color:var(--red);font-size:.66rem" onclick="deleteCandidate(\''+c.id+'\')">Delete</button></div></div>';
+
+  h+='<div class="int-info-grid">';
+  if(c.discord)h+='<span class="info-pill">Discord: '+esc(c.discord)+'</span>';
+  if(c.steam)h+='<span class="info-pill">Steam: '+esc(c.steam)+'</span>';
+  if(c.character)h+='<span class="info-pill">Character: '+esc(c.character)+'</span>';
+  if(c.interviewDate)h+='<span class="info-pill">Interview: '+esc(c.interviewDate)+'</span>';
+  if(c.addedBy)h+='<span class="info-pill">Added by: '+esc(c.addedBy)+'</span>';
+  h+='</div>';
+
+  h+='<div style="margin-bottom:16px"><label style="font-size:.7rem;color:var(--t3)">Interview Date</label>';
+  h+='<input type="date" value="'+(c.interviewDate||'')+'" style="max-width:200px;margin-top:4px" onchange="updateCandField(\''+c.id+'\',\'interviewDate\',this.value)"></div>';
+
+  h+='<div class="int-section-title">Interview Q&A</div><div class="qa-grid">';
+  questions.forEach((q,i)=>{
+    const ans=(c.answers&&c.answers['q'+i])||'';
+    h+='<div class="qa-card"><div class="q">Q'+(i+1)+': '+esc(q)+'</div>';
+    h+='<textarea placeholder="Their answer..." onblur="saveAnswer(\''+c.id+'\','+i+',this.value)" oninput="autoSaveAnswer(\''+c.id+'\','+i+',this.value)">'+esc(ans)+'</textarea></div>';
+  });
+  h+='</div>';
+
+  // Votes
+  const yesCount=(c.votes||[]).filter(v=>v.vote==='yes').length;
+  const noCount=(c.votes||[]).filter(v=>v.vote==='no').length;
+  h+='<div class="int-section-title">Votes &mdash; '+yesCount+' yes / '+noCount+' no</div><div class="vote-section">';
+  if((c.votes||[]).length===0){h+='<div style="color:var(--t4);font-size:.8rem">No votes yet.</div>'}
+  else{(c.votes||[]).forEach(v=>{
+    h+='<div class="vote-row"><span class="'+(v.vote==='yes'?'vote-yes':'vote-no')+'">'+v.vote.toUpperCase()+'</span><span style="color:var(--t2)">'+esc(v.voter)+'</span>';
+    if(v.comment)h+='<span class="vote-comment">"'+esc(v.comment)+'"</span>';
+    h+='</div>';
+  })}
+  h+='<div style="display:flex;gap:6px;margin-top:10px"><button class="btn-confirm" onclick="openVoteModal()">+ Vote</button></div></div>';
+  el.innerHTML=h;
+}
+
+let autoSaveTimers={};
+function autoSaveAnswer(cid,qi,val){const k=cid+'_'+qi;clearTimeout(autoSaveTimers[k]);autoSaveTimers[k]=setTimeout(()=>saveAnswer(cid,qi,val),800)}
+function saveAnswer(cid,qi,val){candidatesRef.doc(cid).update({['answers.q'+qi]:val})}
+function updateCandStatus(cid,s){candidatesRef.doc(cid).update({status:s})}
+function updateCandField(cid,f,v){candidatesRef.doc(cid).update({[f]:v})}
+function deleteCandidate(cid){if(!confirm('Delete this candidate?'))return;candidatesRef.doc(cid).delete();activeCandidateId=null;document.getElementById('int-detail').className='int-detail-empty';document.getElementById('int-detail').innerHTML='Select a candidate'}
+
+function openVoteModal(){
+  pendingVoteChoice=null;
+  document.getElementById('vote-yes-btn').classList.remove('cast');
+  document.getElementById('vote-no-btn').classList.remove('cast');
+  document.getElementById('vote-comment').value='';
+  openModal('modal-vote');
+}
+function selectVote(c){pendingVoteChoice=c;document.getElementById('vote-yes-btn').classList.toggle('cast',c==='yes');document.getElementById('vote-no-btn').classList.toggle('cast',c==='no')}
+function submitVote(){
+  if(!pendingVoteChoice){toast('Pick yes or no');return}
+  if(!activeCandidateId)return;
+  const c=candidates.find(x=>x.id===activeCandidateId);if(!c)return;
+  const voterName=getUserName();
+  const votes=[...(c.votes||[])];
+  const existing=votes.findIndex(v=>v.voter===voterName);
+  if(existing>-1)votes.splice(existing,1);
+  votes.push({vote:pendingVoteChoice,voter:voterName,comment:document.getElementById('vote-comment').value.trim()});
+  candidatesRef.doc(activeCandidateId).update({votes});
+  closeModal('modal-vote');toast('Vote recorded');
+}
+
+// ===== MODALS =====
+function openModal(id){document.getElementById(id).classList.add('open');const inp=document.getElementById(id).querySelector('input');if(inp)setTimeout(()=>inp.focus(),100)}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')})});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'))});
+
+// ===== INIT =====
+buildItemCats();buildVehCats();buildWpnCats();renderItems();renderWeapons();renderVehicles();renderFavorites();buildIntFilters();
+</script></body></html>

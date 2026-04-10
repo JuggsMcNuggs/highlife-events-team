@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Events Garage</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--surface:#111118;--surface2:#1a1a24;--border:#2a2a3a;--accent:#c084fc;--accent2:#818cf8;--gold:#fbbf24;--red:#f87171;--green:#4ade80;--text:#e2e8f0;--muted:#64748b;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+header{background:linear-gradient(135deg,#0f0f1a,#1a0a2e);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;gap:20px;position:sticky;top:0;z-index:100;flex-wrap:wrap;}
+header h1{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.header-sub{font-size:.7rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+.stats{display:flex;gap:20px;font-family:'DM Mono',monospace;font-size:.78rem;color:var(--muted);}
+.stat-val{color:var(--accent);}
+.tabs{display:flex;gap:4px;padding:14px 28px 0;border-bottom:1px solid var(--border);background:var(--surface);}
+.tab{padding:9px 18px;border:1px solid transparent;border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer;font-size:.82rem;font-weight:500;color:var(--muted);background:transparent;transition:all .15s;position:relative;bottom:-1px;}
+.tab:hover{color:var(--text);background:var(--surface2);}
+.tab.active{color:var(--accent);background:var(--bg);border-color:var(--border);border-bottom-color:var(--bg);}
+.tab-count{display:inline-block;background:var(--surface2);border-radius:10px;padding:1px 7px;font-size:.68rem;margin-left:5px;color:var(--muted);}
+.tab.active .tab-count{background:var(--accent);color:#000;}
+.toolbar{padding:14px 28px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--surface);border-bottom:1px solid var(--border);}
+.search-wrap{position:relative;flex:1;min-width:180px;max-width:340px;}
+.search-wrap input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px 8px 34px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;transition:border-color .15s;}
+.search-wrap input:focus{border-color:var(--accent);}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.85rem;pointer-events:none;}
+.cat-filters{display:flex;gap:5px;flex-wrap:wrap;}
+.cat-btn{padding:5px 11px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;font-size:.72rem;font-weight:500;transition:all .15s;white-space:nowrap;}
+.cat-btn:hover{color:var(--text);}
+.cat-btn.active{color:#000;font-weight:700;border-color:transparent;}
+.cat-btn[data-cat="All"].active{background:var(--accent);}
+.cat-btn[data-cat="LSPD"].active{background:#60a5fa;}
+.cat-btn[data-cat="BCSO"].active{background:#34d399;}
+.cat-btn[data-cat="EMS"].active{background:#f87171;}
+.cat-btn[data-cat="DOA"].active{background:#a78bfa;}
+.cat-btn[data-cat="FIB"].active{background:#fb923c;}
+.cat-btn[data-cat="G6"].active{background:#94a3b8;}
+.cat-btn[data-cat="Sports"].active{background:#f472b6;}
+.cat-btn[data-cat="Muscle"].active{background:#fb923c;}
+.cat-btn[data-cat="JDM"].active{background:#22d3ee;}
+.cat-btn[data-cat="Offroad"].active{background:#86efac;}
+.cat-btn[data-cat="Luxury"].active{background:#e2c08d;}
+.cat-btn[data-cat="Bike"].active{background:#c084fc;}
+.cat-btn[data-cat="Heli"].active{background:#67e8f9;}
+.cat-btn[data-cat="Boat"].active{background:#38bdf8;}
+.cat-btn[data-cat="Event"].active{background:#fde68a;}
+.cat-btn[data-cat="Van"].active{background:#a8a29e;}
+.cat-btn[data-cat="Classic"].active{background:#fca5a5;}
+.cat-btn[data-cat="Other"].active{background:#6b7280;color:#fff;}
+.grid-wrap{flex:1;overflow-y:auto;padding:18px 28px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px;display:flex;flex-direction:column;gap:7px;transition:border-color .15s,transform .1s;position:relative;overflow:hidden;cursor:pointer;}
+footer{text-align:center;padding:18px;font-size:.72rem;color:var(--muted);border-top:1px solid var(--border);margin-top:8px;font-family:'DM Mono',monospace;letter-spacing:.5px;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity .2s;}
+.card:hover{border-color:var(--accent);transform:translateY(-1px);}
+.card:hover::before{opacity:1;background:linear-gradient(90deg,var(--accent),var(--accent2));}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:5px;}
+.card-name{font-weight:500;font-size:.87rem;line-height:1.3;flex:1;}
+.card-fav{background:none;border:none;cursor:pointer;font-size:.95rem;padding:2px;opacity:.25;transition:opacity .15s,transform .15s;color:var(--gold);}
+.card-fav:hover{opacity:.7;transform:scale(1.2);}
+.card-fav.active{opacity:1;}
+.card-code{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--accent2);background:var(--surface2);padding:3px 7px;border-radius:5px;word-break:break-all;}
+.card-bottom{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-top:1px;}
+.cat-pill{font-size:.62rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 6px;border-radius:10px;background:var(--surface2);color:var(--muted);}
+.cat-pill[data-cat="LSPD"]{background:rgba(96,165,250,.15);color:#60a5fa;}
+.cat-pill[data-cat="BCSO"]{background:rgba(52,211,153,.15);color:#34d399;}
+.cat-pill[data-cat="EMS"]{background:rgba(248,113,113,.15);color:#f87171;}
+.cat-pill[data-cat="DOA"]{background:rgba(167,139,250,.15);color:#a78bfa;}
+.cat-pill[data-cat="FIB"]{background:rgba(251,146,60,.15);color:#fb923c;}
+.cat-pill[data-cat="G6"]{background:rgba(148,163,184,.15);color:#94a3b8;}
+.cat-pill[data-cat="Sports"]{background:rgba(244,114,182,.15);color:#f472b6;}
+.cat-pill[data-cat="Muscle"]{background:rgba(251,146,60,.15);color:#fb923c;}
+.cat-pill[data-cat="JDM"]{background:rgba(34,211,238,.15);color:#22d3ee;}
+.cat-pill[data-cat="Offroad"]{background:rgba(134,239,172,.15);color:#86efac;}
+.cat-pill[data-cat="Luxury"]{background:rgba(226,192,141,.15);color:#e2c08d;}
+.cat-pill[data-cat="Bike"]{background:rgba(192,132,252,.15);color:#c084fc;}
+.cat-pill[data-cat="Heli"]{background:rgba(103,232,249,.15);color:#67e8f9;}
+.cat-pill[data-cat="Boat"]{background:rgba(56,189,248,.15);color:#38bdf8;}
+.cat-pill[data-cat="Event"]{background:rgba(253,230,138,.15);color:#fde68a;}
+.cat-pill[data-cat="Van"]{background:rgba(168,162,158,.15);color:#a8a29e;}
+.cat-pill[data-cat="Classic"]{background:rgba(252,165,165,.15);color:#fca5a5;}
+.cat-pill[data-cat="Other"]{background:rgba(107,114,128,.15);color:#6b7280;}
+.card-actions{display:flex;gap:4px;}
+.btn-copy,.btn-list-add{font-size:.68rem;padding:3px 7px;border-radius:5px;border:1px solid var(--border);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s;background:var(--surface2);color:var(--muted);}
+.btn-copy:hover{border-color:var(--accent2);color:var(--accent2);}
+.btn-list-add:hover{border-color:var(--accent);color:var(--accent);}
+.btn-copy.copied{background:var(--green);color:#000;border-color:var(--green);}
+.btn-remove{font-size:.68rem;padding:3px 7px;border-radius:5px;border:1px solid var(--red);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s;background:transparent;color:var(--red);}
+.btn-remove:hover{background:var(--red);color:#000;}
+.empty-state{text-align:center;padding:70px 20px;color:var(--muted);grid-column:1/-1;}
+.empty-big{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;letter-spacing:3px;color:var(--border);display:block;margin-bottom:8px;}
+.lists-layout{display:flex;height:calc(100vh - 140px);}
+.lists-sidebar{width:250px;min-width:250px;border-right:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;}
+.lists-sidebar-hdr{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.lists-sidebar-hdr h3{font-size:.75rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted);}
+.btn-new-list{background:var(--accent);color:#000;border:none;border-radius:6px;padding:5px 10px;font-size:.72rem;font-weight:700;cursor:pointer;}
+.btn-new-list:hover{opacity:.85;}
+.list-items{flex:1;overflow-y:auto;padding:8px;}
+.list-item{padding:9px 11px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px;transition:background .1s;margin-bottom:2px;border-left:3px solid transparent;}
+.list-item:hover{background:var(--surface2);}
+.list-item.active{background:var(--surface2);border-left-color:var(--accent);}
+.list-item-name{font-size:.85rem;font-weight:500;flex:1;}
+.list-item-count{font-size:.68rem;color:var(--muted);font-family:'DM Mono',monospace;}
+.list-delete{opacity:0;font-size:.75rem;color:var(--red);cursor:pointer;transition:opacity .15s;background:none;border:none;padding:2px 4px;}
+.list-item:hover .list-delete{opacity:1;}
+.list-content-area{flex:1;overflow-y:auto;padding:20px 24px;}
+.list-empty-state{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--muted);}
+.list-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.list-header h2{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3px;color:var(--accent);}
+.list-header-meta{font-size:.75rem;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px;}
+.btn-rename{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.72rem;color:var(--muted);cursor:pointer;}
+.btn-rename:hover{color:var(--text);border-color:var(--muted);}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px;width:370px;max-width:92vw;}
+.modal h3{font-family:'Bebas Neue',sans-serif;font-size:1.35rem;letter-spacing:2px;margin-bottom:14px;color:var(--accent);}
+.modal input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:9px 13px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;margin-bottom:12px;transition:border-color .15s;}
+.modal input:focus{border-color:var(--accent);}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;}
+.btn-cancel{padding:7px 15px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;}
+.btn-confirm{padding:7px 15px;border-radius:7px;border:none;background:var(--accent);color:#000;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.list-picker{display:flex;flex-direction:column;gap:5px;max-height:240px;overflow-y:auto;margin-bottom:12px;}
+.list-pick-item{padding:9px 13px;border-radius:7px;border:1px solid var(--border);cursor:pointer;font-size:.85rem;background:var(--surface2);transition:all .12s;display:flex;align-items:center;justify-content:space-between;}
+.list-pick-item:hover{border-color:var(--accent);color:var(--accent);}
+.list-pick-count{font-size:.68rem;color:var(--muted);font-family:'DM Mono',monospace;}
+</style>
+</head>
+<body>
+
+<header>
+  <div style="flex-shrink:0">
+    <h1>Events Garage</h1>
+    <div class="header-sub">Highlife RP · Vehicle Database</div>
+  </div>
+  <div class="search-wrap" style="max-width:220px">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="search-all" placeholder="Search…" oninput="renderAll()">
+  </div>
+  <div class="cat-filters" id="cat-filters" style="flex:1"></div>
+  <div class="stats" style="flex-shrink:0">
+    <span>Vehicles: <span class="stat-val" id="stat-total">0</span></span>
+    <span>⭐ <span class="stat-val" id="stat-favs">0</span></span>
+    <span>Lists: <span class="stat-val" id="stat-lists">0</span></span>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('all')">All Vehicles <span class="tab-count" id="tc-all">0</span></button>
+  <button class="tab" onclick="switchTab('favs')">⭐ Favorites <span class="tab-count" id="tc-favs">0</span></button>
+  <button class="tab" onclick="switchTab('lists')">📋 Lists <span class="tab-count" id="tc-lists">0</span></button>
+</div>
+
+<div id="tab-all">
+  <div class="grid-wrap"><div class="grid" id="grid-all"></div></div>
+</div>
+
+<div id="tab-favs" style="display:none">
+  <div class="grid-wrap"><div class="grid" id="grid-favs"></div></div>
+</div>
+
+<div id="tab-lists" style="display:none" class="lists-layout">
+  <div class="lists-sidebar">
+    <div class="lists-sidebar-hdr">
+      <h3>My Lists</h3>
+      <button class="btn-new-list" onclick="openModal('modal-newlist');setTimeout(()=>document.getElementById('input-newlist').focus(),100)">+ New</button>
+    </div>
+    <div class="list-items" id="list-sidebar-items"></div>
+  </div>
+  <div id="list-content-area" class="list-empty-state">
+    <span class="empty-big">NO LIST SELECTED</span>
+    <span style="font-size:.8rem">Create or select a list from the sidebar</span>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-newlist">
+  <div class="modal">
+    <h3>New List</h3>
+    <input type="text" id="input-newlist" placeholder="e.g. 4th of July, Funeral RP…" maxlength="40" onkeydown="if(event.key==='Enter')confirmNewList()">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('modal-newlist')">Cancel</button>
+      <button class="btn-confirm" onclick="confirmNewList()">Create</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-addlist">
+  <div class="modal">
+    <h3>Add to List</h3>
+    <div class="list-picker" id="list-picker-items"></div>
+    <div class="modal-btns"><button class="btn-cancel" onclick="closeModal('modal-addlist')">Cancel</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-rename">
+  <div class="modal">
+    <h3>Rename List</h3>
+    <input type="text" id="input-rename" placeholder="New name…" maxlength="40" onkeydown="if(event.key==='Enter')confirmRename()">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('modal-rename')">Cancel</button>
+      <button class="btn-confirm" onclick="confirmRename()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const RAW=[["BCSO Terminus","bcsoterminus","BCSO"],["Apache","ah64d","Heli"],["Deluxo","por","Sports"],["Boat Mobile","boatmobile","Boat"],["LSPD Rebla","lspdrebla2","LSPD"],["LSPD Komoda","lspdkomoda","LSPD"],["LSPD Buffalo","SWATBUZ","LSPD"],["XY10-R","10r24nbrt","Sports"],["Sahara Twin","atwin2023","Offroad"],["Dutch R","ksd","Sports"],["Charger 21","charger21","Muscle"],["Revulto","REV","Sports"],["BE63","sl63amg22","Luxury"],["R8 13","r8ppi","Sports"],["Skyline S30","s30","JDM"],["M2 23","23m2","Sports"],["Abby","acty","Van"],["EMS Heli","aw139","EMS"],["BMX","bmxsky","Bike"],["Buzzard","buzzard2","Heli"],["SWAT Buzzard","SWATBUZ2","LSPD"],["Pony","pony","Van"],["T250","08f250","Offroad"],["Hayley Davison Deathgrip","vrodft","Bike"],["Sultan Classic","sultan2","Sports"],["Range Rover Velar","velar","Luxury"],["Corsa","corsa","Sports"],["Cadillac CT5","ct5vbw22","Luxury"],["Lexus LC500","lc500","Sports"],["Golf 25","golf25r","Sports"],["Golf MK3","mk3vr6","JDM"],["M3 Touring","23touring","Sports"],["Ford GT 05","fordgt05","Sports"],["Sultan RS","sultanrs","Sports"],["Club","club","Sports"],["Retinue 2","retinue2","Classic"],["Draugur","draugur","Offroad"],["BCSO RAM","bcsoram","BCSO"],["BCSO Tahoe 21","bcso21tahoe","BCSO"],["BCSO Silverado","bcso23silv","BCSO"],["BCSO Blazer 23","bcso23blazer","BCSO"],["BCSO Camaro","bcsocamaro","BCSO"],["BCSO Tacoma","bcsotacoma","BCSO"],["BCSO CTSV Cadillac","bcsoctsv","BCSO"],["BCSO Oracle2","bcsooracle2","BCSO"],["10F Widebody","tenf2","Sports"],["Lynx MK1","lynxmk1","Sports"],["Event Little Vehicle","vbbpxxc","Event"],["LSPD Stinger","lspdstinger","LSPD"],["LSPD Raptor","lspdraptor","LSPD"],["LSPD Explorer K9","lspdk9exp","LSPD"],["LSPD Jackal","lspdjackal","LSPD"],["LSPD Exemplar","lspdexemplar","LSPD"],["LSPD Jester","lspdjester","LSPD"],["LSPD Schlagen","lspdschlagen","LSPD"],["LSPD Rebla","lspdrebla","LSPD"],["DOA Exemplar","doaexemplar","DOA"],["DOA Asterope","doaasterope","DOA"],["DOA Dubsta","doadubsta","DOA"],["DOA Ruiner","doaruiner","DOA"],["DOA Buffalo","doabuffalo","DOA"],["DOA Intruder","doaintruder","DOA"],["DOA Phoenix","doaphoenix","DOA"],["DOA Oracle2","doaoracle2","DOA"],["DOA Rancher XL","doarancherxl","DOA"],["FIB GLX Granger","fibglx","FIB"],["LSPD BCAT SWAT","lspdbcat","LSPD"],["KIA GT Stinger","kiagt","Sports"],["M3 G80","m3g80","Sports"],["M5 G90","m5g90","Sports"],["Lambo Countach 23","lpi8004","Sports"],["Jewel Quadra","gtam21","Sports"],["DMG L55","schlafer","Luxury"],["Calypso V12","cliov6","Sports"],["CT Cybertruck","CyberTruckV","Offroad"],["SR3 20","rs3s20","Sports"],["HZ24","nznismo24","JDM"],["EMS Ambu","ambo1","EMS"],["EMS Ambu 2","ambo2","EMS"],["EMS Ambu 3","ambo3","EMS"],["EMS Landstalker","emslandstalker","EMS"],["EMS Felon","emsfelon","EMS"],["EMS Scout","emsscout","EMS"],["EMS Buffalo","emsbuffalo4","EMS"],["EMS Caracara","emscaracara","EMS"],["Verlierer GT Drift","verlierergt","Sports"],["Harley Davison Soft","softdeluxe13","Bike"],["Hayley Davison Kings","kingsgv2","Bike"],["Jimmy","jimmy","Offroad"],["Hennesy Venom F5","venomf5","Sports"],["Hayley Davison Glide Road","rgxs250","Bike"],["Jubilee","jubilee","Classic"],["Chelengar","chall70","Muscle"],["Futo GTX","futo2","JDM"],["G6 Mesa","bsmesa","G6"],["G6 Pony","bspony","G6"],["G6 Frontier","bsseminolef","G6"],["G6 Surge","bssurge","G6"],["G6 Brickade","chfbrick","G6"],["G6 Buffalo","g6buffalo","G6"],["G6 Caddy","g6caddy","G6"],["G6 Perennial","g6perennial","G6"],["G6 Speedo","g6speedo","G6"],["G6 Executioner","LLexecutioner","G6"],["G6 Merit","llmerit","G6"],["G6 Stocker","llsecuricar","G6"],["G6 Steed","llsteed","G6"],["G6 3 Wheel","secpigeon","G6"],["G6 RCV","g6rcv","G6"],["CT5 VBW 22","22ct5vbw","Luxury"],["Divic EK8","FK8","JDM"],["TR Garis","xp210","Sports"],["H32 GTR","bnr32","JDM"],["Tennis MK7","golf75r","Sports"],["Ghire","vwghiac","Sports"],["F2000","gxap3","Sports"],["Mazda Miata","na6","JDM"],["NOESX 16 NSX","nc1","JDM"],["Maserati GT","maseratigt","Luxury"],["ALR","mbslr","Luxury"],["RS7 23 ABT","23rs7abt","Sports"],["RS7 23","23rs7","Sports"],["Hellaby GT","shelby20","Muscle"],["X6MF16","x6mf16","Luxury"],["Movitec","mlnovitec","Sports"],["Taxi","taxi2","Van"],["Speedo","nspeedo","Van"],["Mini SRT Kart","srtkart","Event"],["Zilvia S14","gxs14","JDM"],["Zilvia S13","nis13","JDM"],["Cullinan","cullinanbb","Luxury"],["911 GT3RS 22","pgt322","Sports"],["NOESX","hna2t","JDM"],["Divic EK9","EK9","JDM"],["JZR","mk2100","JDM"],["L63","e63sf","Luxury"],["Senna McLaren","sennasmso1","Sports"],["Cammy","cam08","Muscle"],["Deer TT","impalass","Classic"],["LFA","lfa","Sports"],["Qashqai","qashqai16","Offroad"],["Zupra","toysupmk4","JDM"],["EP540 Huracan","lhuracant","Sports"],["LSPD Durango","lspddurango","LSPD"],["LSPD Tahoe","lspdtahoe","LSPD"],["LSPD T250","lspdf250","LSPD"],["LSPD Hellcat","lspdhellcat","LSPD"],["LSPD CVPI","lspdcvpi","LSPD"],["LSPD Tahoe 08","lspd08tahoe","LSPD"],["LSPD Caprice","lspdcaprice","LSPD"],["LSPD Charger 14","lspd14charger","LSPD"],["LSPD FPIS","lspdfpis","LSPD"],["LSPD Charger 19","lspd19charger","LSPD"],["LSPD Explorer","lspdexp","LSPD"],["LSPD Silverado","lspdsilverado","LSPD"],["LSPD Dirtbike","lspdbike","LSPD"],["BCSO Mustang","ABSHEL","BCSO"],["DBX","dbx","Luxury"],["Focus RS","focusrs","Sports"],["GLE63","gle","Luxury"],["DUBYARX GX","gxwrx","Offroad"],["Ford Mustang Mach 1","mach1","Muscle"],["Subaru Impreza WTX","subisti08","Sports"],["VW Beetle","vwbeetlenaj","Classic"],["Sierra 21","21sierra","Offroad"],["Pulsar GTIR","nisgtir","JDM"],["Sunny","nissunny","JDM"],["Lexus IS300","is300","JDM"],["H33 GTR","r33","JDM"],["Ferrari Roma","roma20","Sports"],["A90 Zupra","tsgr20","JDM"],["Diver SCR","rsvr16","Sports"],["V4","v4","Bike"],["V4-SL","v4sl","Bike"],["V4-SP","v4sp","Bike"],["V4-R","v4r","Bike"],["V4-S","v4s","Bike"],["Solaris Polaris 22","polaris2022","Offroad"],["Brickade","brickade","Van"],["LS News Heli","newsheli2","Heli"],["Arrow Dart 68","68dart","Classic"],["1979 Chevy Camaro","z2879","Muscle"],["T150 F150 78","f15078","Classic"],["TNX","bgnx","Offroad"],["HAM 7000","10ram","Offroad"],["Hayley Davison Rorredor","corredor","Bike"],["Hayley Davison Carrier","soulcarrier","Bike"],["Hayley Davison Dragoon","dragoon","Bike"],["Hayley Davison Enforcer","enforcer","Bike"],["BCSO Tahoe 06","06tahoew","BCSO"],["BCSO CVPI 11","11cvpiw","BCSO"],["BCSO Caprice 13","13capricew","BCSO"],["BCSO Charger 14","14chargerw","BCSO"],["BCSO Explorer 16","16fpiuw","BCSO"],["BCSO Charger 18","18chargerw","BCSO"],["BCSO T150 18","18f150w","BCSO"],["BCSO Taurus 18","18taurusw","BCSO"],["BCSO Burban 18","18burbanw","BCSO"],["BCSO Tahoe 18","18tahoew","BCSO"],["LSPD Cavalcade","polcavalcade2","LSPD"],["LSPD Huntley","polhuntley","LSPD"],["LSPD Jackal 2","poljackal","LSPD"],["LSPD Oracle","poloracle2","LSPD"],["LSPD Phoenix","polphoenix","LSPD"],["LSPD Rancher","polrancher2","LSPD"],["LSPD Sultan","polsultan","LSPD"],["Taycan Turbo S","taycan","Sports"],["SR5-R","rs5r","Sports"],["Paris","13malibu","Classic"],["Landcruiser J79","landcruiser","Offroad"],["Austin Heeley 300","ah300","Classic"],["P45S","gxa45","Luxury"],["LSPD Charger","polcharger2","LSPD"],["Hayley Davison Hussein","hussar","Bike"],["Navaro","golf","Sports"],["RVO","cvo","Bike"],["Dirt","clay","Offroad"],["DLS63","cls2015","Luxury"],["Dodge Viper 08","vip8","Muscle"],["Shelby Cobra","cobra","Classic"],["R4 B8","s4","Sports"],["Vanish","ast","Sports"],["X50","f5095","Sports"],["Ice Van","icevan","Event"],["SRO8","RSQ8M","Luxury"],["SLS","slsamg","Sports"],["R Roadstar","tesroad20","Sports"],["Lambo Huracan Perf","18performante","Sports"],["Ferrari 512","512tr","Classic"],["Porsche 944","p944","Classic"],["Bucko","wildtrak","Offroad"],["M3 E36","m3e36","Sports"],["X12 TDF","tdf","Sports"],["SR6 20","rs6avant20","Sports"],["SWAT Heli","swathel","Heli"],["Event Egg Car","quadri","Event"],["Velociraptor 6x6","velociraptor","Offroad"],["V250","v250","Luxury"],["Urus","Urus","Offroad"],["SVJ","svj63","Sports"],["AL65","sl65bs","Luxury"],["ARX8","rx811","Sports"],["R-Pace","fpace2017","Offroad"],["911 Turbo S 21","turs21","Sports"],["DW Bison","BisonDW","Offroad"],["F22","F22A","Heli"],["FIB Granger","fibgrangerrto","FIB"],["FIB Granger Unmarked","umkgrangerrto","FIB"],["675XY Spoider","675ltsp","Sports"],["E30","m3e30","Classic"],["B8 I8","I8","Sports"],["GT3 RS","pgt3","Sports"],["X420","f430s","Sports"],["Lada","lada2107","Classic"],["Trackhawk","srt8","Offroad"],["Trackhawk Debaged","srt8b","Offroad"],["XL570","lx570","Offroad"],["Chevy Camaro SS 69","ss69","Muscle"],["TRX","trx","Offroad"],["Tahoe Civ","civtahoe","Other"],["ELS Singer","SingerDLS","Sports"],["Beetle","beetle74","Classic"],["Senna","senna","Sports"],["Tunk Tuk","tunak","Event"],["Jet Ski Trailer","portskitrailer","Boat"],["Vayrone","supersport","Sports"],["Y1 GTR","gtr96","JDM"],["Cayenne","cayenneturbo","Offroad"],["Gallardo","gallardop","Sports"],["Devil","demon","Muscle"],["Station","wagoneer91","Classic"],["X819","f812","Sports"],["Bentley CGTS","cgts","Luxury"],["El Jesse","elcamino70","Classic"],["Harley Davison XLCR","g_xlcr","Bike"],["Audi A4","aaq4","Sports"],["O8","q820","Luxury"],["Camario RL1","zl12017","Muscle"],["Lusy","gtc4","Sports"],["M3 F80","m3f80","Sports"],["TT63S GT63S","rmodgt63","Luxury"],["LSPD Scout Unmarked","umkscout","LSPD"],["LSPD PD17","pd17","LSPD"],["Porsche 992","992c","Sports"],["992 Droptop","992t","Sports"],["Michela Angelo SC","lp670sv","Sports"],["Evo Spoider","hevo","Sports"],["L63 18","e63s","Luxury"],["Aston Martin SuperLeg","superleggera","Sports"],["Stingray E8","c8","Muscle"],["Stingray E6 R06","C6Z06","Muscle"],["N8 Compizarre","bmwm8","Sports"],["Zilvia F15","silvias15","JDM"],["LSPD Bike","policeb1","LSPD"],["LSPD BF400","policeb2","LSPD"],["Jetski","portski","Boat"],["Ruiner Drift","ruinerdm","Classic"],["LSPD Buzzard","polbuz","LSPD"],["Event Shopping Cart","skart","Event"],["Range Rover ST","rrst","Offroad"],["Robin Reliant","robin","Event"],["N6 Z90","m5f90","Sports"],["Mavern","can","Sports"],["Nagara","agerars","Sports"],["Kuruma","nwkuruma","Sports"],["LSPD Felon Unmarked","policefelon","LSPD"],["Buffalo Hellhound","buffaloh","Muscle"],["Snowbike","snowbike","Bike"],["Saleen S7","ss7","Sports"],["Panamera 17","panamera17turbo","Luxury"],["Porsche 918","918","Sports"],["LS News Van","newsvan2","Van"],["Pizza Car","foodcar4","Event"],["Supra","grsupra","JDM"],["Yammi YZ250F","yz250f","Bike"],["Superkart","superkart","Bike"],["Millennial","millennial","Other"],["Honda 3000GT","3000gt","JDM"],["Honda 3000GTA","3000gta","JDM"],["NX450F","kx450f","Bike"],["Police Bike","policebike","LSPD"],["RS3 18","rs318","Sports"],["Yammi YZF R25","r25","Bike"],["AMG GTR Mansory","amggtsmansory","Sports"],["Continental","ben17","Luxury"],["Bentayga","bentaygast","Luxury"],["LSPD Coquette","polcoquette","LSPD"],["Sea Ray L650","yacht2","Boat"],["711 Turbo S","911turboS","Sports"],["360S","720s","Sports"],["DUBYARX STD","subwrx","Sports"],["A500","s500w222","Luxury"],["T150 Captur","f150","Offroad"],["E36 Drift","e36rb","Classic"],["C63 Droptop","mers63c","Luxury"],["Motocompo","motoc","Bike"],["Tesla X","teslax","Other"],["D63S","c63s","Luxury"],["Chevy Escalade","gmt900escalade","Luxury"],["Mustang 65","mustang65","Classic"],["Agusta","agusta","Bike"],["EMS Heli 2","polmav","EMS"],["SWAT Truck","riot","LSPD"],["LSPD Cruiser","police","LSPD"],["LSPD Explorer 2","POLEXPLORER","LSPD"],["LSPD Impala","POLIMPALA","LSPD"],["LSPD Interceptor","POLINTERCEPTOR","LSPD"],["LSPD Explorer 3","polexplorer2","LSPD"],["LSPD Tahoe 2","tahoe","LSPD"],["LSPD Charger 2","POLCHARGER","LSPD"],["Chevy SS","ChevySS","Muscle"],["FIB Bison","fibbison","FIB"],["FIB Dominator","fibdominator","FIB"],["FIB Baller","fibballer","FIB"],["FIB Fugitive","fibfugitive","FIB"],["Fire Truck","fire1","Other"],["LSPD Vic","polvic","LSPD"],["G6 Explorer","gruppe3","G6"],["G6 Charger","gruppe2","G6"],["G6 Crown Vic","gruppe1","G6"],["Challenger 16","16challenger","Muscle"],["Porsche 911R","p911r","Sports"],["DW Flatbed","flatbed3","Van"],["Spirit","rrphantom","Luxury"],["R8","arv10","Sports"],["Waythe","wraith","Luxury"],["Ferrari 488 GTB","488gtb","Sports"],["Lambo Huracan LP580","lp580","Sports"],["H35 GTR","gtr","JDM"],["Ferrari GTO XX","gtoxx","Sports"],["Opel Sierra","SIERRA","Classic"],["CBD","hcbr17","Bike"],["Harley Knucklehead","HDKNUCKLEHEAD","Bike"],["Zerox","aeroxr","Sports"],["Bel-Sky","belair","Classic"],["Model S","models","Other"],["Zupra 2","supra2","JDM"],["LAV4","rav4","Offroad"],["S600 W220","s600w220","Luxury"],["SR7","rs7","Sports"],["SR6","audirs6tk","Sports"],["T8","r8prior","Sports"],["Nissan Escape","pnismo","JDM"],["Huayra BC","bc","Sports"],["E1","p1","Sports"],["Transall","transalp","Bike"],["F63","g65amg","Luxury"],["M6","m6_coupe","Sports"],["M4 F82 HS","f82hs","Sports"],["M4 F82 LW","f82lw","Sports"],["M4 F82 4S","f824slw","Sports"],["M4 F82 Duke","f82duke","Sports"],["M4 F82 ST","f82st","Sports"],["M4 F82","f82","Sports"],["M3 E46","m3e46","Sports"],["Project 17","p7","Sports"],["TT86","gt86","JDM"],["T63 6x6","6x6","Offroad"],["N5 T60","m5e60","Sports"],["Motorhome","caravan","Van"],["Devil SC","500gtrlam","Sports"],["Crossout","cross","Other"],["N3 T92","bmwm3","Sports"],["EP 720-2 SC","sv","Sports"],["SR6 B1","c5rs6","Sports"],["R4","b5s4","Sports"],["Opel Adam","opeladam","Classic"],["I454","458","Sports"],["Nissan 180 SX","180sx","JDM"],["Python 99","99viper","Muscle"],["Charchar SRT","16charger","Muscle"],["Charchar R/T 1969","69charger","Muscle"],["370Z Ismo","370z","JDM"],["DMG GTR","amggtr","Sports"],["Boss 429","boss429","Muscle"],["Stingray E7","C7","Muscle"],["Verfasto","2019chiron","Sports"],["Divic","civic","JDM"],["D-Type 68","etype2","Classic"],["Devo 9","evo9","JDM"],["Devo 10","lanex400","JDM"],["Grand Tour","gt17","Sports"],["Maserati GHI","14ghibli","Luxury"],["Gouda","hemicuda","Muscle"],["La Purrari","aperta","Sports"],["Waythe 2","MGT","Luxury"],["Leaf","prius","Other"],["H34 GTR","Skyline","JDM"],["Diver SCR 2","rrab","Sports"],["ARX7","rx7tunable","JDM"],["Twig","twingo","Classic"],["Rumpo Utility","rumpo3","Van"],["Vacca","vacca","Sports"]];
+
+const CATS=["All","LSPD","BCSO","EMS","DOA","FIB","G6","Sports","Muscle","JDM","Offroad","Luxury","Bike","Heli","Boat","Event","Van","Classic","Other"];
+let vehicles=RAW.map((r,i)=>({id:i,name:r[0],code:r[1],cat:r[2]}));
+let favorites=new Set(JSON.parse(localStorage.getItem('eg_favs')||'[]'));
+let lists=JSON.parse(localStorage.getItem('eg_lists')||'{}');
+let activeCat='All',activeList=null,pendingVid=null;
+
+function save(){localStorage.setItem('eg_favs',JSON.stringify([...favorites]));localStorage.setItem('eg_lists',JSON.stringify(lists));}
+
+function updateStats(){
+  document.getElementById('stat-total').textContent=vehicles.length;
+  document.getElementById('stat-favs').textContent=favorites.size;
+  const lc=Object.keys(lists).length;
+  document.getElementById('stat-lists').textContent=lc;
+  document.getElementById('tc-all').textContent=vehicles.length;
+  document.getElementById('tc-favs').textContent=favorites.size;
+  document.getElementById('tc-lists').textContent=lc;
+}
+
+function switchTab(tab){
+  ['all','favs','lists'].forEach((t,i)=>{
+    document.getElementById('tab-'+t).style.display=t===tab?(t==='lists'?'flex':'block'):'none';
+    document.querySelectorAll('.tab')[i].classList.toggle('active',t===tab);
+  });
+  if(tab==='all')renderAll();
+  if(tab==='favs')renderFavs();
+  if(tab==='lists')renderListsSidebar();
+}
+
+function buildCatFilters(){
+  document.getElementById('cat-filters').innerHTML=CATS.map(c=>`<button class="cat-btn${c==='All'?' active':''}" data-cat="${c}" onclick="setCat('${c}')">${c}</button>`).join('');
+}
+
+function setCat(cat){
+  activeCat=cat;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.toggle('active',b.dataset.cat===cat));
+  renderAll();
+}
+
+function cardCopy(e,el,code){navigator.clipboard.writeText(code).then(()=>{el.style.borderColor='var(--green)';el.querySelector('.card-code').style.color='var(--green)';setTimeout(()=>{el.style.borderColor='';el.querySelector('.card-code').style.color='';},1200);});}
+
+function filtered(pool,searchId){
+  const q=(document.getElementById('search-all')?.value||'').toLowerCase();
+  return pool.filter(v=>(!q||v.name.toLowerCase().includes(q)||v.code.toLowerCase().includes(q))&&(activeCat==='All'||v.cat===activeCat));
+}
+
+function card(v,inList=false){
+  return `<div class="card" onclick="cardCopy(event,this,'${v.code}')" title="Click to copy spawn code"><div class="card-top"><div class="card-name">${v.name}</div><button class="card-fav${favorites.has(v.id)?' active':''}" onclick="event.stopPropagation();toggleFav(${v.id})">⭐</button></div><div class="card-code">${v.code}</div><div class="card-bottom"><span class="cat-pill" data-cat="${v.cat}">${v.cat}</span><div class="card-actions"><button class="btn-list-add" onclick="event.stopPropagation();openAddList(${v.id})">+ List</button>${inList?`<button class="btn-remove" onclick="event.stopPropagation();removeFromList(${v.id})">Remove</button>`:''}</div></div></div>`;
+}
+
+function empty(msg){return `<div class="empty-state"><span class="empty-big">${msg}</span></div>`;}
+
+function renderAll(){document.getElementById('grid-all').innerHTML=(f=filtered(vehicles,'search-all')).length?f.map(v=>card(v)).join(''):empty('NO RESULTS');}
+function renderFavs(){const fv=vehicles.filter(v=>favorites.has(v.id));const f=filtered(fv,'search-favs');document.getElementById('grid-favs').innerHTML=f.length?f.map(v=>card(v)).join(''):empty(favorites.size?'NO MATCHES':'NO FAVORITES YET');}
+
+function toggleFav(id){favorites.has(id)?favorites.delete(id):favorites.add(id);save();updateStats();renderAll();if(activeList)renderCurrentList();}
+
+function copyCode(btn,code){navigator.clipboard.writeText(code).then(()=>{btn.textContent='✓ Copied';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},1500);});}
+
+function renderListsSidebar(){
+  const keys=Object.keys(lists);
+  document.getElementById('list-sidebar-items').innerHTML=keys.length?keys.map(n=>`<div class="list-item${activeList===n?' active':''}" onclick="selectList('${n.replace(/'/g,"\\'")}')"><span class="list-item-name">${n}</span><span class="list-item-count">${lists[n].length}</span><button class="list-delete" onclick="deleteList(event,'${n.replace(/'/g,"\\'")}')">✕</button></div>`).join(''):`<div style="padding:18px;color:var(--muted);font-size:.8rem;text-align:center">No lists yet</div>`;
+  if(activeList&&lists[activeList])renderCurrentList();
+}
+
+function selectList(n){activeList=n;renderListsSidebar();}
+
+function renderCurrentList(){
+  if(!activeList||!lists[activeList])return;
+  const vs=vehicles.filter(v=>lists[activeList].includes(v.id));
+  const area=document.getElementById('list-content-area');
+  area.className='list-content-area';
+  area.innerHTML=`<div class="list-header"><div><h2>${activeList}</h2><div class="list-header-meta">${vs.length} vehicle${vs.length!==1?'s':''}</div></div><button class="btn-rename" onclick="openRename()">Rename</button></div><div class="grid">${vs.length?vs.map(v=>card(v,true)).join(''):empty('EMPTY LIST')}</div>`;
+}
+
+function removeFromList(id){if(!activeList)return;lists[activeList]=lists[activeList].filter(i=>i!==id);save();updateStats();renderCurrentList();renderListsSidebar();}
+
+function openAddList(vid){
+  pendingVid=vid;
+  const keys=Object.keys(lists);
+  document.getElementById('list-picker-items').innerHTML=keys.length?keys.map(n=>`<div class="list-pick-item" onclick="addToList('${n.replace(/'/g,"\\'")}')"><span>${n}</span><span class="list-pick-count">${lists[n].length}</span></div>`).join(''):`<div style="color:var(--muted);font-size:.85rem;padding:8px">No lists yet — go to the Lists tab to create one.</div>`;
+  openModal('modal-addlist');
+}
+
+function addToList(n){if(pendingVid===null)return;if(!lists[n].includes(pendingVid))lists[n].push(pendingVid);save();updateStats();closeModal('modal-addlist');pendingVid=null;}
+
+function confirmNewList(){const n=document.getElementById('input-newlist').value.trim();if(!n)return;if(!lists[n])lists[n]=[];activeList=n;save();updateStats();closeModal('modal-newlist');if(document.querySelector('.tab.active').textContent.includes('Lists'))renderListsSidebar();}
+
+function deleteList(e,n){e.stopPropagation();delete lists[n];if(activeList===n){activeList=null;document.getElementById('list-content-area').className='list-empty-state';document.getElementById('list-content-area').innerHTML='<span class="empty-big">NO LIST SELECTED</span><span style="font-size:.8rem">Select a list from the sidebar</span>';}save();updateStats();renderListsSidebar();}
+
+function openRename(){document.getElementById('input-rename').value=activeList||'';openModal('modal-rename');setTimeout(()=>document.getElementById('input-rename').focus(),100);}
+
+function confirmRename(){const nw=document.getElementById('input-rename').value.trim();if(!nw||!activeList||nw===activeList){closeModal('modal-rename');return;}lists[nw]=lists[activeList];delete lists[activeList];activeList=nw;save();closeModal('modal-rename');renderListsSidebar();}
+
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));});
+
+buildCatFilters();updateStats();renderAll();
+</script>
+<footer>Created by JuggsMcNuggs &nbsp;·&nbsp; Built with her A.I. Levi.</footer>
+</body>
+</html>
