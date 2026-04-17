@@ -909,7 +909,9 @@ candidatesRef.on('value',snap=>{
   candidates.sort((a,b)=>(b.created||0)-(a.created||0));
   document.getElementById('badge-interviews').textContent=candidates.length;
   renderIntSidebar();
-  if(activeCandidateId)renderIntDetail();
+  // Don't re-render detail while user is actively editing an answer textarea
+  const isEditingAnswer=[...document.querySelectorAll('[id^="qa-ta-"]')].some(el=>el.style.display!=='none');
+  if(activeCandidateId&&!isEditingAnswer)renderIntDetail();
 });
 
 function createCandidate(){
@@ -971,6 +973,10 @@ function renderIntDetail(){
   h+='<div style="margin-bottom:16px"><label style="font-size:.7rem;color:var(--t3)">Interview Date</label>';
   h+='<input type="date" value="'+(c.interviewDate||'')+'" style="max-width:200px;margin-top:4px" onchange="updateCandField(\''+c.id+'\',\'interviewDate\',this.value)"></div>';
 
+  h+='<div class="int-section-title">Interview Notes</div>';
+  h+='<div style="margin-bottom:20px"><textarea id="int-notes-ta" style="width:100%;background:var(--s2);border:1px solid var(--brd);border-radius:8px;padding:12px;color:var(--t1);font-family:var(--sans);font-size:.83rem;outline:none;resize:vertical;min-height:90px;transition:border-color .15s" placeholder="General notes about this candidate..." onfocus="this.style.borderColor=\'var(--accent)\'" onblur="this.style.borderColor=\'var(--brd)\'">'+esc(c.notes||'')+'</textarea>';
+  h+='<button class="btn-confirm" style="margin-top:8px;font-size:.75rem;padding:6px 18px" onclick="saveIntNotes(\''+c.id+'\')">Save Notes</button></div>';
+
   h+='<div class="int-section-title">Interview Q&A</div><div class="qa-grid">';
   questions.forEach((q,i)=>{
     const ans=(c.answers&&c.answers['q'+i])||'';
@@ -998,6 +1004,7 @@ function renderIntDetail(){
   el.innerHTML=h;
 }
 
+function saveIntNotes(cid){const val=document.getElementById('int-notes-ta').value;db.ref('et_candidates/'+cid).update({notes:val});toast('Notes saved')}
 function saveAnswer(cid,qi,val){db.ref('et_candidates/'+cid+'/answers/q'+qi).set(val)}
 function updateCandStatus(cid,s){db.ref('et_candidates/'+cid).update({status:s})}
 function updateCandField(cid,f,v){db.ref('et_candidates/'+cid).update({[f]:v})}
