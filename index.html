@@ -299,6 +299,13 @@ footer{text-align:center;padding:18px;font-size:.7rem;color:var(--t4);border-top
 
 <div class="modal-overlay" id="modal-editquestions"><div class="modal" style="width:600px"><h3>Interview Questions</h3><p style="font-size:.76rem;color:var(--t3);margin-bottom:14px">Changes apply to new interviews. Existing answers stay intact.</p><div class="q-editor-list" id="q-editor-list"></div><div style="margin-top:10px;display:flex;gap:8px"><input type="text" id="q-new-input" placeholder="Add a new question..." style="flex:1" onkeydown="if(event.key==='Enter')addQuestion()"><button class="btn-confirm" onclick="addQuestion()">Add</button></div><div class="modal-btns" style="margin-top:14px"><button class="btn-confirm" onclick="closeModal('modal-editquestions')">Done</button></div></div></div>
 
+<div class="modal-overlay" id="modal-editcandidate"><div class="modal"><h3>Edit Candidate</h3>
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Name</label><input type="text" id="edit-cand-name" placeholder="Character / Player name">
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Discord</label><input type="text" id="edit-cand-discord" placeholder="Discord handle">
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Steam ID</label><input type="text" id="edit-cand-steam" placeholder="Steam ID">
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Character Name</label><input type="text" id="edit-cand-character" placeholder="In-game character name">
+<div class="modal-btns"><button class="btn-cancel" onclick="closeModal('modal-editcandidate')">Cancel</button><button class="btn-confirm" onclick="saveEditCandidate()">Save</button></div></div></div>
+
 <div class="modal-overlay" id="modal-vote"><div class="modal"><h3>Cast Your Vote</h3><div style="display:flex;gap:10px;margin-bottom:12px"><button class="vote-btn yes" id="vote-yes-btn" onclick="selectVote('yes')" style="flex:1">YES</button><button class="vote-btn no" id="vote-no-btn" onclick="selectVote('no')" style="flex:1">NO</button></div><textarea id="vote-comment" placeholder="Optional comment..." style="min-height:60px"></textarea><div class="modal-btns"><button class="btn-cancel" onclick="closeModal('modal-vote')">Cancel</button><button class="btn-confirm" onclick="submitVote()">Submit</button></div></div></div>
 
 <div class="toast" id="toast"></div>
@@ -950,6 +957,7 @@ function renderIntDetail(){
   h+='<select class="status-select" onchange="updateCandStatus(\''+c.id+'\',this.value)">';
   ['Awaiting','Interviewed','Accepted','Denied'].forEach(s=>{h+='<option'+(c.status===s?' selected':'')+'>'+s+'</option>'});
   h+='</select>';
+  h+='<button class="btn-sm" onclick="openEditCandidate(\''+c.id+'\')" style="font-size:.66rem">Edit</button>';
   h+='<button class="btn-sm" style="border-color:var(--red);color:var(--red);font-size:.66rem" onclick="deleteCandidate(\''+c.id+'\')">Delete</button></div></div>';
 
   h+='<div class="int-info-grid">';
@@ -966,8 +974,13 @@ function renderIntDetail(){
   h+='<div class="int-section-title">Interview Q&A</div><div class="qa-grid">';
   questions.forEach((q,i)=>{
     const ans=(c.answers&&c.answers['q'+i])||'';
-    h+='<div class="qa-card"><div class="q">Q'+(i+1)+': '+esc(q)+'</div>';
-    h+='<textarea placeholder="Their answer..." onblur="saveAnswer(\''+c.id+'\','+i+',this.value)" oninput="autoSaveAnswer(\''+c.id+'\','+i+',this.value)">'+esc(ans)+'</textarea></div>';
+    h+='<div class="qa-card" id="qa-card-'+i+'">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div class="q" style="margin-bottom:0">Q'+(i+1)+': '+esc(q)+'</div>';
+    h+='<button class="btn-sm" style="font-size:.6rem;flex-shrink:0;margin-left:8px" onclick="toggleAnswerEdit(\''+c.id+'\','+i+')">Edit</button></div>';
+    h+='<div class="qa-answer-text" id="qa-text-'+i+'" style="font-size:.8rem;color:'+(ans?'var(--t1)':'var(--t4)')+';min-height:40px;line-height:1.5">'+esc(ans||'No answer yet')+'</div>';
+    h+='<textarea id="qa-ta-'+i+'" style="display:none;width:100%;background:var(--bg);border:1px solid var(--accent);border-radius:6px;padding:8px 10px;color:var(--t1);font-family:var(--sans);font-size:.8rem;outline:none;resize:vertical;min-height:70px">'+esc(ans)+'</textarea>';
+    h+='<div id="qa-save-'+i+'" style="display:none;margin-top:6px;display:none;gap:6px"><button class="btn-confirm" style="font-size:.68rem;padding:4px 12px" onclick="commitAnswer(\''+c.id+'\','+i+')">Save</button><button class="btn-cancel" style="font-size:.68rem;padding:4px 10px" onclick="cancelAnswerEdit('+i+')">Cancel</button></div>';
+    h+='</div>';
   });
   h+='</div>';
 
@@ -985,12 +998,65 @@ function renderIntDetail(){
   el.innerHTML=h;
 }
 
-let autoSaveTimers={};
-function autoSaveAnswer(cid,qi,val){const k=cid+'_'+qi;clearTimeout(autoSaveTimers[k]);autoSaveTimers[k]=setTimeout(()=>saveAnswer(cid,qi,val),800)}
 function saveAnswer(cid,qi,val){db.ref('et_candidates/'+cid+'/answers/q'+qi).set(val)}
 function updateCandStatus(cid,s){db.ref('et_candidates/'+cid).update({status:s})}
 function updateCandField(cid,f,v){db.ref('et_candidates/'+cid).update({[f]:v})}
 function deleteCandidate(cid){if(!confirm('Delete this candidate?'))return;db.ref('et_candidates/'+cid).remove();activeCandidateId=null;document.getElementById('int-detail').className='int-detail-empty';document.getElementById('int-detail').innerHTML='Select a candidate'}
+
+// Answer edit toggle
+function toggleAnswerEdit(cid,qi){
+  const ta=document.getElementById('qa-ta-'+qi);
+  const txt=document.getElementById('qa-text-'+qi);
+  const btns=document.getElementById('qa-save-'+qi);
+  txt.style.display='none';
+  ta.style.display='block';
+  btns.style.display='flex';
+  ta.focus();
+}
+function commitAnswer(cid,qi){
+  const ta=document.getElementById('qa-ta-'+qi);
+  const val=ta.value;
+  saveAnswer(cid,qi,val);
+  const txt=document.getElementById('qa-text-'+qi);
+  txt.textContent=val||'No answer yet';
+  txt.style.color=val?'var(--t1)':'var(--t4)';
+  ta.style.display='none';
+  txt.style.display='block';
+  document.getElementById('qa-save-'+qi).style.display='none';
+  toast('Answer saved');
+}
+function cancelAnswerEdit(qi){
+  const ta=document.getElementById('qa-ta-'+qi);
+  const txt=document.getElementById('qa-text-'+qi);
+  ta.style.display='none';
+  txt.style.display='block';
+  document.getElementById('qa-save-'+qi).style.display='none';
+}
+
+// Candidate card edit
+function openEditCandidate(cid){
+  const c=candidates.find(x=>x.id===cid);if(!c)return;
+  document.getElementById('edit-cand-name').value=c.name||'';
+  document.getElementById('edit-cand-discord').value=c.discord||'';
+  document.getElementById('edit-cand-steam').value=c.steam||'';
+  document.getElementById('edit-cand-character').value=c.character||'';
+  document.getElementById('modal-editcandidate').dataset.cid=cid;
+  openModal('modal-editcandidate');
+}
+function saveEditCandidate(){
+  const cid=document.getElementById('modal-editcandidate').dataset.cid;
+  if(!cid)return;
+  const name=document.getElementById('edit-cand-name').value.trim();
+  if(!name){toast('Name is required');return}
+  db.ref('et_candidates/'+cid).update({
+    name,
+    discord:document.getElementById('edit-cand-discord').value.trim(),
+    steam:document.getElementById('edit-cand-steam').value.trim(),
+    character:document.getElementById('edit-cand-character').value.trim()
+  });
+  closeModal('modal-editcandidate');
+  toast('Candidate updated');
+}
 
 function openVoteModal(){
   pendingVoteChoice=null;
