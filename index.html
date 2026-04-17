@@ -981,7 +981,14 @@ function renderIntDetail(){
   questions.forEach((q,i)=>{
     const ans=(c.answers&&c.answers['q'+i])||'';
     h+='<div class="qa-card" id="qa-card-'+i+'">';
-    h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div class="q" style="margin-bottom:0">Q'+(i+1)+': '+esc(q)+'</div>';
+    h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">';
+    h+='<div id="q-display-'+i+'" style="display:flex;align-items:flex-start;gap:6px;flex:1">';
+    h+='<div class="q" style="margin-bottom:0" id="q-text-'+i+'">Q'+(i+1)+': '+esc(q)+'</div>';
+    h+='<button class="btn-sm" style="font-size:.55rem;padding:2px 6px;flex-shrink:0;opacity:.6" title="Edit question" onclick="toggleQuestionEdit('+i+',\''+escAttr(q)+'\')">✏</button></div>';
+    h+='<div id="q-edit-'+i+'" style="display:none;flex:1;gap:6px;flex-direction:column">';
+    h+='<input id="q-input-'+i+'" value="'+escAttr(q)+'" style="width:100%;font-size:.78rem;font-weight:600;color:var(--t1)">';
+    h+='<div style="display:flex;gap:6px;margin-top:4px"><button class="btn-confirm" style="font-size:.62rem;padding:3px 10px" onclick="commitQuestion('+i+')">Save</button><button class="btn-cancel" style="font-size:.62rem;padding:3px 8px" onclick="cancelQuestionEdit('+i+',\''+escAttr(q)+'\')">Cancel</button></div>';
+    h+='</div>';
     h+='<button class="btn-sm" style="font-size:.6rem;flex-shrink:0;margin-left:8px" onclick="toggleAnswerEdit(\''+c.id+'\','+i+')">Edit</button></div>';
     h+='<div class="qa-answer-text" id="qa-text-'+i+'" style="font-size:.8rem;color:'+(ans?'var(--t1)':'var(--t4)')+';min-height:40px;line-height:1.5">'+esc(ans||'No answer yet')+'</div>';
     h+='<textarea id="qa-ta-'+i+'" style="display:none;width:100%;background:var(--bg);border:1px solid var(--accent);border-radius:6px;padding:8px 10px;color:var(--t1);font-family:var(--sans);font-size:.8rem;outline:none;resize:vertical;min-height:70px">'+esc(ans)+'</textarea>';
@@ -1009,6 +1016,30 @@ function saveAnswer(cid,qi,val){db.ref('et_candidates/'+cid+'/answers/q'+qi).set
 function updateCandStatus(cid,s){db.ref('et_candidates/'+cid).update({status:s})}
 function updateCandField(cid,f,v){db.ref('et_candidates/'+cid).update({[f]:v})}
 function deleteCandidate(cid){if(!confirm('Delete this candidate?'))return;db.ref('et_candidates/'+cid).remove();activeCandidateId=null;document.getElementById('int-detail').className='int-detail-empty';document.getElementById('int-detail').innerHTML='Select a candidate'}
+
+// Question inline edit
+function toggleQuestionEdit(qi,current){
+  document.getElementById('q-display-'+qi).style.display='none';
+  const qe=document.getElementById('q-edit-'+qi);
+  qe.style.display='flex';
+  const inp=document.getElementById('q-input-'+qi);
+  inp.value=current;inp.focus();inp.select();
+  inp.onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();commitQuestion(qi)}if(e.key==='Escape')cancelQuestionEdit(qi,current)};
+}
+function commitQuestion(qi){
+  const val=document.getElementById('q-input-'+qi).value.trim();
+  if(!val)return;
+  questions[qi]=val;
+  questionsRef.update({list:questions});
+  document.getElementById('q-text-'+qi).textContent='Q'+(qi+1)+': '+val;
+  document.getElementById('q-edit-'+qi).style.display='none';
+  document.getElementById('q-display-'+qi).style.display='flex';
+  toast('Question updated');
+}
+function cancelQuestionEdit(qi,original){
+  document.getElementById('q-edit-'+qi).style.display='none';
+  document.getElementById('q-display-'+qi).style.display='flex';
+}
 
 // Answer edit toggle
 function toggleAnswerEdit(cid,qi){
