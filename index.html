@@ -6,7 +6,7 @@
 <title>Highlife · Events Team Hub</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
 :root{--bg:#0a0a0f;--s1:#111118;--s2:#1a1a24;--s3:#22222e;--brd:#2a2a3a;--accent:#c084fc;--accent2:#818cf8;--accentG:rgba(192,132,252,.12);--gold:#fbbf24;--red:#f87171;--green:#4ade80;--t1:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--t4:#475569;--t5:#334155;--mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;--display:'Bebas Neue',sans-serif}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -332,16 +332,16 @@ const vehicles=VRAW.map((r,i)=>({id:i,name:r[0],code:r[1],cat:r[2]}));
 
 // ===== FIREBASE =====
 firebase.initializeApp({apiKey:"AIzaSyAqzUCHWGTCO7CIRiGldSnsfz5f0tzQ5V0",authDomain:"diamond-casino-tracker.firebaseapp.com",databaseURL:"https://diamond-casino-tracker-default-rtdb.firebaseio.com",projectId:"diamond-casino-tracker",storageBucket:"diamond-casino-tracker.firebasestorage.app",messagingSenderId:"973952156488",appId:"1:973952156488:web:a4729ae9f843ae941b297d"});
-const db=firebase.firestore();
+const db=firebase.database();
 
 // ===== ACCESS CODE + NAME SYSTEM =====
 let accessCode='HLET2026';
 let userName=localStorage.getItem('et_username')||'';
-const accessCodeRef=db.collection('et_config').doc('access_code');
+const accessCodeRef=db.ref('et_config/access_code');
 
-accessCodeRef.onSnapshot(doc=>{
-  if(doc.exists){
-    accessCode=doc.data().code||'HLET2026';
+accessCodeRef.on('value',snap=>{
+  if(snap.exists()){
+    accessCode=snap.val().code||'HLET2026';
     const saved=localStorage.getItem('et_access_code');
     if(saved&&saved!==accessCode){
       localStorage.removeItem('et_access_code');
@@ -423,7 +423,7 @@ function changeAccessCode(){
   const msg=document.getElementById('cc-msg');
   if(old!==accessCode){msg.style.color='var(--red)';msg.textContent='Current code is wrong';return}
   if(nw.length<3){msg.style.color='var(--red)';msg.textContent='Too short';return}
-  accessCodeRef.update({code:nw});
+  db.ref('et_config/access_code').update({code:nw});
   localStorage.setItem('et_access_code',nw);
   msg.style.color='var(--green)';msg.textContent='Code updated!';
   setTimeout(()=>{closeModal('modal-changecode');document.getElementById('cc-old').value='';document.getElementById('cc-new').value='';msg.textContent=''},1200);
@@ -450,31 +450,34 @@ let pendingListItem=null;
 let sharedLists={},activeListId=null,listSearchQ='';
 let candidates=[],questions=[],intStatusFilter='All',activeCandidateId=null,pendingVoteChoice=null;
 
-// Category overrides (synced via firestore)
+// Category overrides (synced via realtime database)
 let itemCatOverrides={};
 let vehCatOverrides={};
-const catOverridesRef=db.collection('et_config').doc('cat_overrides');
-catOverridesRef.onSnapshot(doc=>{
-  if(doc.exists){
-    itemCatOverrides=doc.data().items||{};
-    vehCatOverrides=doc.data().vehicles||{};
+const catOverridesRef=db.ref('et_config/cat_overrides');
+catOverridesRef.on('value',snap=>{
+  if(snap.exists()){
+    itemCatOverrides=snap.val().items||{};
+    vehCatOverrides=snap.val().vehicles||{};
   }
   renderItems();renderVehicles();
 });
 
 function saveItemCatOverride(code,newCat){
   itemCatOverrides[code]=newCat;
-  catOverridesRef.set({items:itemCatOverrides,vehicles:vehCatOverrides},{merge:true});
+  catOverridesRef.update({items:itemCatOverrides,vehicles:vehCatOverrides});
 }
 function saveVehCatOverride(code,newCat){
   vehCatOverrides[code]=newCat;
-  catOverridesRef.set({items:itemCatOverrides,vehicles:vehCatOverrides},{merge:true});
+  catOverridesRef.update({items:itemCatOverrides,vehicles:vehCatOverrides});
 }
 
-// Firestore refs
-const listsRef=db.collection('et_lists');
-const candidatesRef=db.collection('et_candidates');
-const questionsRef=db.collection('et_questions');
+// Realtime Database refs
+const listsRef=db.ref('et_lists');
+const candidatesRef=db.ref('et_candidates');
+const questionsRef=db.ref('et_questions/template');
+
+// Helper: normalize RTDB value to array
+function toArr(val){if(!val)return[];return Array.isArray(val)?val:Object.values(val)}
 
 // ===== NAV =====
 function switchSection(s){
@@ -764,9 +767,9 @@ function toggleVehFav(code){
 }
 
 // ===== SHARED LISTS =====
-listsRef.orderBy('created').onSnapshot(snap=>{
+listsRef.on('value',snap=>{
   sharedLists={};
-  snap.forEach(doc=>{sharedLists[doc.id]={...doc.data(),id:doc.id}});
+  if(snap.exists()){snap.forEach(child=>{const d=child.val();sharedLists[child.key]={...d,id:child.key,items:toArr(d.items)}})}
   document.getElementById('badge-lists').textContent=Object.keys(sharedLists).length;
   renderListsSidebar();
   if(activeListId&&sharedLists[activeListId])renderListContent();
@@ -775,19 +778,19 @@ listsRef.orderBy('created').onSnapshot(snap=>{
 function createList(){
   const name=document.getElementById('input-newlist').value.trim();
   if(!name)return;
-  listsRef.add({name,items:[],created:firebase.firestore.FieldValue.serverTimestamp(),createdBy:getUserName()});
+  listsRef.push({name,items:[],created:Date.now(),createdBy:getUserName()});
   document.getElementById('input-newlist').value='';
   closeModal('modal-newlist');
 }
 function deleteList(id){
   if(!confirm('Delete this list?'))return;
   if(activeListId===id){activeListId=null;renderListContent()}
-  listsRef.doc(id).delete();
+  db.ref('et_lists/'+id).remove();
 }
 function clearList(){
   if(!activeListId)return;
   if(!confirm('Remove all items from this list?'))return;
-  listsRef.doc(activeListId).update({items:[]});
+  db.ref('et_lists/'+activeListId+'/items').set([]);
 }
 function selectList(id){activeListId=id;listSearchQ='';renderListsSidebar();renderListContent()}
 
@@ -861,22 +864,22 @@ function addToList(listId){
   const l=sharedLists[listId];const items=[...(l.items||[])];
   if(items.find(i=>i.code===pendingListItem.code)){toast('Already in list');closeModal('modal-addtolist');return}
   items.push({...pendingListItem,addedBy:getUserName()});
-  listsRef.doc(listId).update({items});
+  db.ref('et_lists/'+listId+'/items').set(items);
   toast('Added to '+l.name);closeModal('modal-addtolist');pendingListItem=null;
 }
 
 function removeFromList(code){
   if(!activeListId)return;
   const items=(sharedLists[activeListId].items||[]).filter(i=>i.code!==code);
-  listsRef.doc(activeListId).update({items});
+  db.ref('et_lists/'+activeListId+'/items').set(items);
 }
 
 // ===== INTERVIEWS =====
-questionsRef.doc('template').onSnapshot(doc=>{
-  if(doc.exists){questions=doc.data().list||[]}
+questionsRef.on('value',snap=>{
+  if(snap.exists()){questions=toArr(snap.val().list)||[]}
   else{
     questions=["Tell me about one of your favorite moments here in the city.","Have you worked anywhere else in Los Santos? How did that prepare you for working here?","How do you typically handle conflict between you and another person?","Why did you apply to the Events Team?","What kind of events would you like to see on the server?","Describe a situation where you had to think on your feet."];
-    questionsRef.doc('template').set({list:questions});
+    questionsRef.set({list:questions});
   }
   renderQuestionEditor();
   if(activeCandidateId)renderIntDetail();
@@ -889,12 +892,14 @@ function renderQuestionEditor(){
   });
   document.getElementById('q-editor-list').innerHTML=h;
 }
-function updateQuestion(idx,val){questions[idx]=val;questionsRef.doc('template').update({list:questions})}
-function deleteQuestion(idx){questions.splice(idx,1);questionsRef.doc('template').update({list:questions})}
-function addQuestion(){const inp=document.getElementById('q-new-input');const v=inp.value.trim();if(!v)return;questions.push(v);questionsRef.doc('template').update({list:questions});inp.value=''}
+function updateQuestion(idx,val){questions[idx]=val;questionsRef.update({list:questions})}
+function deleteQuestion(idx){questions.splice(idx,1);questionsRef.update({list:questions})}
+function addQuestion(){const inp=document.getElementById('q-new-input');const v=inp.value.trim();if(!v)return;questions.push(v);questionsRef.update({list:questions});inp.value=''}
 
-candidatesRef.orderBy('created','desc').onSnapshot(snap=>{
-  candidates=[];snap.forEach(doc=>{candidates.push({...doc.data(),id:doc.id})});
+candidatesRef.on('value',snap=>{
+  candidates=[];
+  if(snap.exists()){snap.forEach(child=>{const d=child.val();candidates.push({...d,id:child.key,votes:toArr(d.votes),answers:d.answers||{}})});}
+  candidates.sort((a,b)=>(b.created||0)-(a.created||0));
   document.getElementById('badge-interviews').textContent=candidates.length;
   renderIntSidebar();
   if(activeCandidateId)renderIntDetail();
@@ -906,7 +911,7 @@ function createCandidate(){
   const steam=document.getElementById('cand-steam').value.trim();
   const character=document.getElementById('cand-character').value.trim();
   if(!name){toast('Name is required');return}
-  candidatesRef.add({name,discord,steam,character,status:'Awaiting',answers:{},interviewDate:'',votes:[],created:firebase.firestore.FieldValue.serverTimestamp(),addedBy:getUserName()});
+  candidatesRef.push({name,discord,steam,character,status:'Awaiting',answers:{},interviewDate:'',votes:[],created:Date.now(),addedBy:getUserName()});
   ['cand-name','cand-discord','cand-steam','cand-character'].forEach(id=>document.getElementById(id).value='');
   closeModal('modal-newcandidate');toast('Candidate added');
 }
@@ -982,10 +987,10 @@ function renderIntDetail(){
 
 let autoSaveTimers={};
 function autoSaveAnswer(cid,qi,val){const k=cid+'_'+qi;clearTimeout(autoSaveTimers[k]);autoSaveTimers[k]=setTimeout(()=>saveAnswer(cid,qi,val),800)}
-function saveAnswer(cid,qi,val){candidatesRef.doc(cid).update({['answers.q'+qi]:val})}
-function updateCandStatus(cid,s){candidatesRef.doc(cid).update({status:s})}
-function updateCandField(cid,f,v){candidatesRef.doc(cid).update({[f]:v})}
-function deleteCandidate(cid){if(!confirm('Delete this candidate?'))return;candidatesRef.doc(cid).delete();activeCandidateId=null;document.getElementById('int-detail').className='int-detail-empty';document.getElementById('int-detail').innerHTML='Select a candidate'}
+function saveAnswer(cid,qi,val){db.ref('et_candidates/'+cid+'/answers/q'+qi).set(val)}
+function updateCandStatus(cid,s){db.ref('et_candidates/'+cid).update({status:s})}
+function updateCandField(cid,f,v){db.ref('et_candidates/'+cid).update({[f]:v})}
+function deleteCandidate(cid){if(!confirm('Delete this candidate?'))return;db.ref('et_candidates/'+cid).remove();activeCandidateId=null;document.getElementById('int-detail').className='int-detail-empty';document.getElementById('int-detail').innerHTML='Select a candidate'}
 
 function openVoteModal(){
   pendingVoteChoice=null;
@@ -1004,7 +1009,7 @@ function submitVote(){
   const existing=votes.findIndex(v=>v.voter===voterName);
   if(existing>-1)votes.splice(existing,1);
   votes.push({vote:pendingVoteChoice,voter:voterName,comment:document.getElementById('vote-comment').value.trim()});
-  candidatesRef.doc(activeCandidateId).update({votes});
+  db.ref('et_candidates/'+activeCandidateId).update({votes});
   closeModal('modal-vote');toast('Vote recorded');
 }
 
