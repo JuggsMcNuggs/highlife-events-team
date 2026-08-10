@@ -184,6 +184,68 @@ body{background:var(--bg);color:var(--t1);font-family:var(--sans);min-height:100
 
 footer{text-align:center;padding:18px;font-size:.7rem;color:var(--t4);border-top:1px solid var(--brd);margin-top:8px;font-family:var(--mono);letter-spacing:.5px}
 .section{display:none}.section.active{display:block}
+
+/* CALENDAR */
+.cal-toolbar{padding:16px 28px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--s1);border-bottom:1px solid var(--brd)}
+.cal-nav{display:flex;align-items:center;gap:10px}
+.cal-nav button{background:var(--s2);border:1px solid var(--brd);color:var(--t2);padding:6px 12px;border-radius:6px;cursor:pointer;font-family:var(--sans);font-size:.75rem;font-weight:500}
+.cal-nav button:hover{border-color:var(--accent);color:var(--accent)}
+.cal-month-label{font-size:1rem;font-weight:600;min-width:160px;text-align:center}
+.cal-grid-wrap{padding:16px 28px}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px}
+.cal-weekday{text-align:center;font-size:.65rem;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:1px;padding:6px 0}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-day{background:var(--s1);border:1px solid var(--brd);border-radius:6px;min-height:90px;padding:6px;cursor:pointer;transition:border-color .15s}
+.cal-day:hover{border-color:var(--accent)}
+.cal-day.other-month{opacity:.3}
+.cal-day.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.cal-day-num{font-size:.72rem;font-weight:600;color:var(--t2);margin-bottom:4px}
+.cal-day.today .cal-day-num{color:var(--accent)}
+.cal-evt{font-size:.6rem;background:var(--accentG);color:var(--accent);padding:3px 6px;border-radius:4px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;border-left:2px solid var(--accent);display:block}
+.cal-evt:hover{background:rgba(192,132,252,.25)}
+.cal-evt-time{color:var(--accent2);margin-right:3px}
+
+/* TAG INPUT */
+.tag-input-wrap{display:flex;flex-wrap:wrap;gap:4px;background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:6px 10px;min-height:38px;cursor:text;transition:border-color .15s}
+.tag-input-wrap:focus-within{border-color:var(--accent)}
+.tag-chip{display:inline-flex;align-items:center;gap:4px;background:var(--accentG);color:var(--accent);padding:2px 8px;border-radius:12px;font-size:.72rem;font-weight:500}
+.tag-chip .tag-x{cursor:pointer;opacity:.6;font-size:.8rem}
+.tag-chip .tag-x:hover{opacity:1}
+.tag-input{border:none;background:none;color:var(--t1);font-family:var(--sans);font-size:.82rem;outline:none;flex:1;min-width:80px}
+.tag-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--s1);border:1px solid var(--brd);border-radius:6px;max-height:160px;overflow-y:auto;z-index:100;display:none}
+.tag-dropdown.show{display:block}
+.tag-option{padding:7px 12px;font-size:.8rem;cursor:pointer;color:var(--t2)}
+.tag-option:hover,.tag-option.highlighted{background:var(--accentG);color:var(--accent)}
+
+/* MANAGEMENT */
+.mgmt-gate{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 56px);flex-direction:column}
+.mgmt-inner{display:none}
+.mgmt-toolbar{padding:16px 28px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--s1);border-bottom:1px solid var(--brd)}
+.mgmt-tabs{display:flex;gap:2px}
+.mgmt-tab{padding:6px 16px;border-radius:6px;border:1px solid var(--brd);background:var(--s2);color:var(--t3);cursor:pointer;font-size:.75rem;font-weight:500;font-family:var(--sans);transition:all .15s}
+.mgmt-tab:hover{color:var(--t1)}
+.mgmt-tab.active{background:var(--accent);color:#000;border-color:transparent;font-weight:700}
+.mgmt-panel{display:none;padding:16px 28px}.mgmt-panel.active{display:block}
+.roster-list{display:flex;flex-direction:column;gap:0}
+.roster-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--brd)}
+.roster-row:hover{background:rgba(255,255,255,.02)}
+.roster-name{font-size:.88rem;font-weight:500;min-width:140px;flex-shrink:0}
+.roster-field{font-size:.78rem;color:var(--t2);font-family:var(--mono);cursor:pointer;padding:2px 8px;border-radius:4px;transition:background .15s}
+.roster-field:hover{background:var(--accentG);color:var(--accent)}
+.roster-field-label{font-size:.6rem;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;margin-right:2px}
+.roster-del{opacity:0;font-size:.72rem;color:var(--red);cursor:pointer;background:none;border:none;padding:4px 8px;transition:opacity .15s;font-family:var(--sans);margin-left:auto;flex-shrink:0}
+.roster-row:hover .roster-del{opacity:1}
+.roster-add{display:flex;gap:8px;margin-bottom:16px}
+.roster-add input{flex:1;background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:9px 13px;color:var(--t1);font-family:var(--sans);font-size:.83rem;outline:none}
+.roster-add input:focus{border-color:var(--accent)}
+
+/* EVENT DETAIL MODAL */
+.evt-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.evt-detail-grid label{font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px}
+.evt-detail-grid input,.evt-detail-grid select{width:100%}
+.evt-meta{font-size:.72rem;color:var(--t3);margin-bottom:14px;display:flex;gap:16px}
+.evt-attend-list{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.evt-attend-pill{font-size:.72rem;background:var(--accentG);color:var(--accent);padding:3px 10px;border-radius:12px;font-weight:500}
 </style>
 </head>
 <body>
@@ -221,6 +283,8 @@ footer{text-align:center;padding:18px;font-size:.7rem;color:var(--t4);border-top
 <button class="nav-tab" onclick="switchSection('favorites')" data-section="favorites">Favorites <span class="badge" id="badge-favorites">0</span></button>
 <button class="nav-tab" onclick="switchSection('lists')" data-section="lists">Lists <span class="badge" id="badge-lists">0</span></button>
 <button class="nav-tab" onclick="switchSection('interviews')" data-section="interviews">Interviews <span class="badge" id="badge-interviews">0</span></button>
+<button class="nav-tab" onclick="switchSection('calendar')" data-section="calendar">Calendar</button>
+<button class="nav-tab" onclick="switchSection('management')" data-section="management">Management</button>
 </div>
 <div class="nav-user" id="nav-user"></div>
 </nav>
@@ -277,6 +341,108 @@ footer{text-align:center;padding:18px;font-size:.7rem;color:var(--t4);border-top
 <div id="int-detail" class="int-detail-empty">Select a candidate</div>
 </div>
 </div>
+
+<!-- CALENDAR SECTION -->
+<div class="section" id="sec-calendar">
+<div class="cal-toolbar">
+<div class="cal-nav">
+<button onclick="calPrev()">◀</button>
+<div class="cal-month-label" id="cal-month-label"></div>
+<button onclick="calNext()">▶</button>
+<button onclick="calToday()" style="margin-left:6px">Today</button>
+</div>
+<div style="margin-left:auto"><button class="btn-accent" onclick="openNewEvent()">+ New Event</button></div>
+</div>
+<div class="cal-grid-wrap">
+<div class="cal-weekdays"><div class="cal-weekday">Sun</div><div class="cal-weekday">Mon</div><div class="cal-weekday">Tue</div><div class="cal-weekday">Wed</div><div class="cal-weekday">Thu</div><div class="cal-weekday">Fri</div><div class="cal-weekday">Sat</div></div>
+<div class="cal-days" id="cal-days"></div>
+</div>
+</div>
+
+<!-- MANAGEMENT SECTION -->
+<div class="section" id="sec-management">
+<div class="mgmt-gate" id="mgmt-gate">
+<div style="font-family:var(--display);font-size:1.6rem;letter-spacing:3px;color:var(--accent);margin-bottom:6px">MANAGEMENT</div>
+<div style="font-size:.8rem;color:var(--t3);margin-bottom:24px">Enter management password to continue</div>
+<input type="password" id="mgmt-pw-input" placeholder="Password" style="background:var(--s1);border:1px solid var(--brd);color:var(--t1);padding:14px 20px;font-size:.9rem;font-family:var(--sans);text-align:center;width:280px;outline:none;border-radius:8px" onkeydown="if(event.key==='Enter')tryMgmt()">
+<div style="margin-top:12px"><button onclick="tryMgmt()" style="background:var(--accent);color:#000;border:none;padding:12px 40px;font-size:.75rem;font-weight:700;letter-spacing:3px;cursor:pointer;font-family:var(--sans);border-radius:6px">ENTER</button></div>
+<div id="mgmt-pw-err" style="color:var(--red);font-size:.72rem;margin-top:10px;height:16px"></div>
+</div>
+<div class="mgmt-inner" id="mgmt-inner">
+<div class="mgmt-toolbar">
+<div class="mgmt-tabs">
+<button class="mgmt-tab active" onclick="switchMgmt('mgmt-roster')">Roster</button>
+<button class="mgmt-tab" onclick="switchMgmt('mgmt-cal')">Calendar</button>
+<button class="mgmt-tab" onclick="switchMgmt('mgmt-settings')">Settings</button>
+</div>
+</div>
+<div class="mgmt-panel active" id="mgmt-roster">
+<div class="roster-add">
+<input type="text" id="roster-name-input" placeholder="Name" onkeydown="if(event.key==='Enter')document.getElementById('roster-dc-input').focus()">
+<input type="text" id="roster-dc-input" placeholder="Discord" onkeydown="if(event.key==='Enter')document.getElementById('roster-steam-input').focus()">
+<input type="text" id="roster-steam-input" placeholder="Steam ID" onkeydown="if(event.key==='Enter')addRosterMember()">
+<button class="btn-accent" onclick="addRosterMember()">Add</button>
+</div>
+<div id="roster-count" style="font-size:.7rem;color:var(--t3);margin-bottom:12px"></div>
+<div class="roster-list" id="roster-list"></div>
+</div>
+<div class="mgmt-panel" id="mgmt-cal">
+<div class="cal-toolbar" style="padding:0 0 16px;background:none;border:none">
+<div class="cal-nav">
+<button onclick="mcalPrev()">◀</button>
+<div class="cal-month-label" id="mcal-month-label"></div>
+<button onclick="mcalNext()">▶</button>
+<button onclick="mcalToday()" style="margin-left:6px">Today</button>
+</div>
+</div>
+<div class="cal-weekdays"><div class="cal-weekday">Sun</div><div class="cal-weekday">Mon</div><div class="cal-weekday">Tue</div><div class="cal-weekday">Wed</div><div class="cal-weekday">Thu</div><div class="cal-weekday">Fri</div><div class="cal-weekday">Sat</div></div>
+<div class="cal-days" id="mcal-days"></div>
+</div>
+<div class="mgmt-panel" id="mgmt-settings">
+<h3 style="font-size:.9rem;margin-bottom:16px">Change Management Password</h3>
+<div style="max-width:340px">
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Current Password</label>
+<input type="password" id="mgmt-chg-old" placeholder="Current password" style="margin-bottom:10px">
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">New Password</label>
+<input type="password" id="mgmt-chg-new" placeholder="New password" style="margin-bottom:10px">
+<div id="mgmt-chg-msg" style="font-size:.72rem;height:16px;margin-bottom:8px"></div>
+<button class="btn-accent" onclick="changeMgmtPw()">Update Password</button>
+</div>
+<hr style="border:none;border-top:1px solid var(--brd);margin:28px 0">
+<h3 style="font-size:.9rem;margin-bottom:16px">Change Site Access Code</h3>
+<div style="max-width:340px">
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Current Access Code</label>
+<input type="password" id="mgmt-ac-old" placeholder="Current code" style="margin-bottom:10px">
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">New Access Code</label>
+<input type="password" id="mgmt-ac-new" placeholder="New code" style="margin-bottom:10px">
+<div id="mgmt-ac-msg" style="font-size:.72rem;height:16px;margin-bottom:8px"></div>
+<button class="btn-accent" onclick="changeSiteCode()">Update Access Code</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- EVENT MODALS -->
+<div class="modal-overlay" id="modal-newevent"><div class="modal" style="width:480px"><h3 id="evt-modal-title">New Event</h3>
+<div class="evt-detail-grid">
+<div style="grid-column:1/-1"><label>Title</label><input type="text" id="evt-title" placeholder="Meeting, Training, Event name..."></div>
+<div><label>Date</label><input type="date" id="evt-date"></div>
+<div><label>Time (your local time)</label><input type="time" id="evt-time"></div>
+</div>
+<div id="evt-meta-info" style="display:none" class="evt-meta"></div>
+<div id="evt-attend-display" style="display:none;margin-bottom:14px">
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:4px">Attendance</label>
+<div class="evt-attend-list" id="evt-attend-pills"></div>
+</div>
+<div id="evt-attendance-wrap" style="display:none;margin-bottom:14px">
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:4px">Attendance</label>
+<div style="position:relative" id="tag-container">
+<div class="tag-input-wrap" id="evt-attend-tags" onclick="focusTagInput()"><input type="text" class="tag-input" id="evt-attend-input" placeholder="Type a name..." oninput="filterAttendees()" onkeydown="tagKeydown(event)" autocomplete="off"></div>
+<div class="tag-dropdown" id="evt-attend-dropdown"></div>
+</div>
+</div>
+<input type="hidden" id="evt-edit-id">
+<div class="modal-btns"><button class="btn-cancel" onclick="closeModal('modal-newevent')">Cancel</button><button class="btn-confirm" id="evt-save-btn" onclick="saveEvent()">Create</button><button class="btn-cancel" id="evt-del-btn" style="display:none;background:rgba(248,113,113,.1);border-color:var(--red);color:var(--red)" onclick="deleteEvent()">Delete</button></div></div></div>
 
 <!-- MODALS -->
 <div class="modal-overlay" id="modal-customfav"><div class="modal"><h3>Add Custom Entry</h3>
@@ -1013,7 +1179,20 @@ function renderIntDetail(){
 
 function saveIntNotes(cid){const val=document.getElementById('int-notes-ta').value;db.ref('et_candidates/'+cid).update({notes:val});toast('Notes saved')}
 function saveAnswer(cid,qi,val){db.ref('et_candidates/'+cid+'/answers/q'+qi).set(val)}
-function updateCandStatus(cid,s){db.ref('et_candidates/'+cid).update({status:s})}
+function updateCandStatus(cid,s){
+  db.ref('et_candidates/'+cid).update({status:s});
+  if(s==='Accepted'){
+    const c=candidates.find(x=>x.id===cid);
+    if(c){
+      const name=c.character||c.name;
+      const alreadyExists=roster.some(r=>r.name.toLowerCase()===name.toLowerCase());
+      if(!alreadyExists){
+        rosterRef.push({name,discord:c.discord||'',steam:c.steam||'',addedFrom:'interview',addedAt:Date.now()});
+        toast(name+' added to roster');
+      }
+    }
+  }
+}
 function updateCandField(cid,f,v){db.ref('et_candidates/'+cid).update({[f]:v})}
 function deleteCandidate(cid){if(!confirm('Delete this candidate?'))return;db.ref('et_candidates/'+cid).remove();activeCandidateId=null;document.getElementById('int-detail').className='int-detail-empty';document.getElementById('int-detail').innerHTML='Select a candidate'}
 
@@ -1123,6 +1302,332 @@ function closeModal(id){document.getElementById(id).classList.remove('open')}
 document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')})});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'))});
 
+// ===== CALENDAR & MANAGEMENT =====
+const calRef=db.ref('et_calendar');
+const rosterRef=db.ref('et_roster');
+const mgmtPwRef=db.ref('et_config/mgmt_password');
+let calEvents={},roster=[],mgmtPassword='events2026',mgmtAuthed=false;
+let calYear=new Date().getFullYear(),calMonth=new Date().getMonth();
+let mcalYear=new Date().getFullYear(),mcalMonth=new Date().getMonth();
+let selectedAttendees=[],tagHighlight=-1,isManagementView=false;
+
+mgmtPwRef.on('value',s=>{if(s.exists())mgmtPassword=s.val();else mgmtPwRef.set('events2026')});
+calRef.on('value',s=>{calEvents=s.exists()?s.val():{};renderCalendar();renderMcal()});
+rosterRef.on('value',s=>{
+  roster=[];
+  if(s.exists())s.forEach(c=>{const v=c.val();roster.push({id:c.key,name:v.name,discord:v.discord||'',steam:v.steam||''})});
+  roster.sort((a,b)=>a.name.localeCompare(b.name));
+  renderRoster();
+});
+
+// MANAGEMENT AUTH
+function tryMgmt(){
+  if(document.getElementById('mgmt-pw-input').value===mgmtPassword){
+    mgmtAuthed=true;
+    document.getElementById('mgmt-gate').style.display='none';
+    document.getElementById('mgmt-inner').style.display='block';
+    renderRoster();renderMcal();
+  } else {
+    document.getElementById('mgmt-pw-err').textContent='Wrong password';
+  }
+}
+function switchMgmt(panel){
+  document.querySelectorAll('.mgmt-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById(panel).classList.add('active');
+  document.querySelectorAll('.mgmt-tab').forEach(t=>t.classList.toggle('active',t.textContent.trim()===({
+    'mgmt-roster':'Roster','mgmt-cal':'Calendar','mgmt-settings':'Settings'
+  }[panel])));
+  if(panel==='mgmt-cal')renderMcal();
+}
+function changeMgmtPw(){
+  const old=document.getElementById('mgmt-chg-old').value;
+  const nw=document.getElementById('mgmt-chg-new').value;
+  const msg=document.getElementById('mgmt-chg-msg');
+  if(old!==mgmtPassword){msg.style.color='var(--red)';msg.textContent='Wrong current password';return}
+  if(!nw||nw.length<3){msg.style.color='var(--red)';msg.textContent='New password too short';return}
+  mgmtPwRef.set(nw);
+  msg.style.color='var(--green)';msg.textContent='Password updated!';
+  document.getElementById('mgmt-chg-old').value='';document.getElementById('mgmt-chg-new').value='';
+}
+function changeSiteCode(){
+  const old=document.getElementById('mgmt-ac-old').value;
+  const nw=document.getElementById('mgmt-ac-new').value;
+  const msg=document.getElementById('mgmt-ac-msg');
+  if(old!==accessCode){msg.style.color='var(--red)';msg.textContent='Wrong current code';return}
+  if(!nw||nw.length<3){msg.style.color='var(--red)';msg.textContent='New code too short';return}
+  accessCodeRef.set({code:nw});
+  msg.style.color='var(--green)';msg.textContent='Access code updated!';
+  document.getElementById('mgmt-ac-old').value='';document.getElementById('mgmt-ac-new').value='';
+}
+
+// ROSTER
+function copyField(text,label){
+  navigator.clipboard.writeText(text).then(()=>toast('Copied '+label+': '+text));
+}
+function renderRoster(){
+  const el=document.getElementById('roster-list');
+  const cnt=document.getElementById('roster-count');
+  if(cnt)cnt.textContent=roster.length+' team member'+(roster.length===1?'':'s');
+  if(!roster.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--t3);font-size:.85rem">No team members yet</div>';return}
+  el.innerHTML=roster.map(r=>{
+    let h='<div class="roster-row">';
+    h+='<span class="roster-name">'+esc(r.name)+'</span>';
+    if(r.discord)h+='<span class="roster-field" onclick="copyField(\''+escAttr(r.discord)+'\',\'Discord\')" title="Click to copy"><span class="roster-field-label">DC</span>'+esc(r.discord)+'</span>';
+    if(r.steam)h+='<span class="roster-field" onclick="copyField(\''+escAttr(r.steam)+'\',\'Steam\')" title="Click to copy"><span class="roster-field-label">Steam</span>'+esc(r.steam)+'</span>';
+    h+='<button class="roster-del" onclick="removeRoster(\''+r.id+'\')">Remove</button>';
+    h+='</div>';
+    return h;
+  }).join('');
+}
+function addRosterMember(){
+  const nameInp=document.getElementById('roster-name-input');
+  const dcInp=document.getElementById('roster-dc-input');
+  const steamInp=document.getElementById('roster-steam-input');
+  const name=nameInp.value.trim();if(!name){toast('Name is required');return}
+  const discord=dcInp.value.trim();
+  const steam=steamInp.value.trim();
+  rosterRef.push({name,discord,steam,addedAt:Date.now()});
+  nameInp.value='';dcInp.value='';steamInp.value='';
+  nameInp.focus();toast('Added '+name);
+}
+function removeRoster(id){if(confirm('Remove this team member?'))rosterRef.child(id).remove()}
+
+// CALENDAR RENDERING
+function daysInMonth(y,m){return new Date(y,m+1,0).getDate()}
+function fmtLocalTime(utcISO){
+  const d=new Date(utcISO);
+  return d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+}
+function renderCalGeneric(year,month,containerId,labelId,isMgmt){
+  const label=document.getElementById(labelId);
+  const container=document.getElementById(containerId);
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  label.textContent=months[month]+' '+year;
+  const firstDay=new Date(year,month,1).getDay();
+  const days=daysInMonth(year,month);
+  const prevDays=daysInMonth(year,month-1);
+  const today=new Date();
+  let h='';
+  // Previous month padding
+  for(let i=firstDay-1;i>=0;i--){
+    h+='<div class="cal-day other-month"><div class="cal-day-num">'+(prevDays-i)+'</div></div>';
+  }
+  // Current month
+  for(let d=1;d<=days;d++){
+    const dateStr=year+'-'+String(month+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const isToday=today.getFullYear()===year&&today.getMonth()===month&&today.getDate()===d;
+    h+='<div class="cal-day'+(isToday?' today':'')+'" onclick="openDayEvents(\''+dateStr+'\','+(isMgmt?'true':'false')+')">';
+    h+='<div class="cal-day-num">'+d+'</div>';
+    // Events for this day
+    const dayEvents=getEventsForDate(dateStr);
+    dayEvents.forEach(e=>{
+      h+='<div class="cal-evt" onclick="event.stopPropagation();openEventDetail(\''+e.id+'\','+(isMgmt?'true':'false')+')" title="'+esc(e.title)+'">';
+      h+='<span class="cal-evt-time">'+fmtLocalTime(e.utc)+'</span>'+esc(e.title)+'</div>';
+    });
+    h+='</div>';
+  }
+  // Next month padding
+  const totalCells=firstDay+days;
+  const remaining=totalCells%7===0?0:7-(totalCells%7);
+  for(let i=1;i<=remaining;i++){
+    h+='<div class="cal-day other-month"><div class="cal-day-num">'+i+'</div></div>';
+  }
+  container.innerHTML=h;
+}
+function getEventsForDate(dateStr){
+  const results=[];
+  Object.keys(calEvents).forEach(id=>{
+    const e=calEvents[id];
+    const local=new Date(e.utc);
+    const localDate=local.getFullYear()+'-'+String(local.getMonth()+1).padStart(2,'0')+'-'+String(local.getDate()).padStart(2,'0');
+    if(localDate===dateStr)results.push({...e,id});
+  });
+  results.sort((a,b)=>new Date(a.utc)-new Date(b.utc));
+  return results;
+}
+function renderCalendar(){renderCalGeneric(calYear,calMonth,'cal-days','cal-month-label',false)}
+function renderMcal(){if(mgmtAuthed)renderCalGeneric(mcalYear,mcalMonth,'mcal-days','mcal-month-label',true)}
+function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--}renderCalendar()}
+function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++}renderCalendar()}
+function calToday(){calYear=new Date().getFullYear();calMonth=new Date().getMonth();renderCalendar()}
+function mcalPrev(){mcalMonth--;if(mcalMonth<0){mcalMonth=11;mcalYear--}renderMcal()}
+function mcalNext(){mcalMonth++;if(mcalMonth>11){mcalMonth=0;mcalYear++}renderMcal()}
+function mcalToday(){mcalYear=new Date().getFullYear();mcalMonth=new Date().getMonth();renderMcal()}
+
+// EVENT CRUD
+function openNewEvent(){
+  isManagementView=false;
+  document.getElementById('evt-modal-title').textContent='New Event';
+  document.getElementById('evt-title').value='';
+  document.getElementById('evt-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('evt-time').value='12:00';
+  document.getElementById('evt-edit-id').value='';
+  document.getElementById('evt-save-btn').textContent='Create';
+  document.getElementById('evt-save-btn').style.display='';
+  document.getElementById('evt-del-btn').style.display='none';
+  document.getElementById('evt-attendance-wrap').style.display='none';
+  document.getElementById('evt-attend-display').style.display='none';
+  document.getElementById('evt-meta-info').style.display='none';
+  document.getElementById('evt-title').disabled=false;
+  document.getElementById('evt-date').disabled=false;
+  document.getElementById('evt-time').disabled=false;
+  selectedAttendees=[];renderTagChips();
+  openModal('modal-newevent');
+}
+function openDayEvents(dateStr,isMgmt){
+  isManagementView=isMgmt===true;
+  document.getElementById('evt-modal-title').textContent='New Event';
+  document.getElementById('evt-title').value='';
+  document.getElementById('evt-date').value=dateStr;
+  document.getElementById('evt-time').value='12:00';
+  document.getElementById('evt-edit-id').value='';
+  document.getElementById('evt-save-btn').textContent='Create';
+  document.getElementById('evt-save-btn').style.display='';
+  document.getElementById('evt-del-btn').style.display='none';
+  document.getElementById('evt-attendance-wrap').style.display=isManagementView?'block':'none';
+  document.getElementById('evt-attend-display').style.display='none';
+  document.getElementById('evt-meta-info').style.display='none';
+  document.getElementById('evt-title').disabled=false;
+  document.getElementById('evt-date').disabled=false;
+  document.getElementById('evt-time').disabled=false;
+  selectedAttendees=[];renderTagChips();
+  openModal('modal-newevent');
+}
+function openEventDetail(id,isMgmt){
+  isManagementView=isMgmt===true;
+  const e=calEvents[id];if(!e)return;
+  const local=new Date(e.utc);
+  document.getElementById('evt-modal-title').textContent=isManagementView?'Edit Event':'Event Details';
+  document.getElementById('evt-title').value=e.title;
+  document.getElementById('evt-date').value=local.getFullYear()+'-'+String(local.getMonth()+1).padStart(2,'0')+'-'+String(local.getDate()).padStart(2,'0');
+  document.getElementById('evt-time').value=String(local.getHours()).padStart(2,'0')+':'+String(local.getMinutes()).padStart(2,'0');
+  document.getElementById('evt-edit-id').value=id;
+  document.getElementById('evt-save-btn').textContent='Save';
+  // Show meta info
+  const meta=document.getElementById('evt-meta-info');
+  let metaH='';
+  if(e.createdBy)metaH+='<span>Created by: '+esc(e.createdBy)+'</span>';
+  if(e.updatedBy&&e.updatedBy!==e.createdBy)metaH+='<span>Updated by: '+esc(e.updatedBy)+'</span>';
+  meta.innerHTML=metaH;meta.style.display=metaH?'flex':'none';
+  // Show delete only if management OR you created it
+  const canDelete=isManagementView||e.createdBy===getUserName();
+  document.getElementById('evt-del-btn').style.display=canDelete?'inline-block':'none';
+  // Attendance display (read-only pills) for team view
+  const attendDisplay=document.getElementById('evt-attend-display');
+  const attendPills=document.getElementById('evt-attend-pills');
+  if(!isManagementView&&e.attendance&&e.attendance.length){
+    attendPills.innerHTML=e.attendance.map(n=>'<span class="evt-attend-pill">'+esc(n)+'</span>').join('');
+    attendDisplay.style.display='block';
+  } else {
+    attendDisplay.style.display='none';
+  }
+  // Tag input (editable) only in management view
+  document.getElementById('evt-attendance-wrap').style.display=isManagementView?'block':'none';
+  selectedAttendees=e.attendance?[...e.attendance]:[];
+  renderTagChips();
+  // Disable fields if not management and not your event
+  const canEdit=isManagementView||e.createdBy===getUserName();
+  document.getElementById('evt-title').disabled=!canEdit;
+  document.getElementById('evt-date').disabled=!canEdit;
+  document.getElementById('evt-time').disabled=!canEdit;
+  document.getElementById('evt-save-btn').style.display=canEdit?'':'none';
+  openModal('modal-newevent');
+}
+function saveEvent(){
+  const title=document.getElementById('evt-title').value.trim();
+  const date=document.getElementById('evt-date').value;
+  const time=document.getElementById('evt-time').value;
+  if(!title){toast('Title is required');return}
+  if(!date){toast('Date is required');return}
+  const localDate=new Date(date+'T'+(time||'12:00')+':00');
+  const utc=localDate.toISOString();
+  const editId=document.getElementById('evt-edit-id').value;
+  const data={title,utc,updatedBy:getUserName()};
+  if(isManagementView)data.attendance=selectedAttendees.length?selectedAttendees:null;
+  if(editId){
+    calRef.child(editId).update(data);toast('Event updated');
+  } else {
+    data.createdBy=getUserName();data.created=Date.now();
+    calRef.push(data);toast('Event created');
+  }
+  closeModal('modal-newevent');
+  document.getElementById('evt-title').disabled=false;
+  document.getElementById('evt-date').disabled=false;
+  document.getElementById('evt-time').disabled=false;
+}
+function deleteEvent(){
+  const id=document.getElementById('evt-edit-id').value;
+  if(!id)return;if(!confirm('Delete this event?'))return;
+  calRef.child(id).remove();toast('Event deleted');closeModal('modal-newevent');
+}
+
+// TAG INPUT FOR ATTENDANCE
+function focusTagInput(){document.getElementById('evt-attend-input').focus()}
+function renderTagChips(){
+  const wrap=document.getElementById('evt-attend-tags');
+  const inp=document.getElementById('evt-attend-input');
+  wrap.innerHTML='';
+  selectedAttendees.forEach((name,i)=>{
+    const chip=document.createElement('span');chip.className='tag-chip';
+    chip.innerHTML=esc(name)+'<span class="tag-x" onclick="removeAttendee('+i+')">&times;</span>';
+    wrap.appendChild(chip);
+  });
+  wrap.appendChild(inp);inp.value='';
+  closeTagDropdown();
+}
+function removeAttendee(i){selectedAttendees.splice(i,1);renderTagChips()}
+function filterAttendees(){
+  const q=document.getElementById('evt-attend-input').value.toLowerCase().trim();
+  const dd=document.getElementById('evt-attend-dropdown');
+  if(!q){closeTagDropdown();return}
+  const matches=roster.filter(r=>r.name.toLowerCase().includes(q)&&!selectedAttendees.includes(r.name));
+  if(!matches.length){closeTagDropdown();return}
+  tagHighlight=0;
+  dd.innerHTML=matches.map((r,i)=>'<div class="tag-option'+(i===0?' highlighted':'')+'" onmousedown="pickAttendee(\''+escAttr(r.name)+'\')">'+esc(r.name)+'</div>').join('');
+  dd.classList.add('show');
+}
+function pickAttendee(name){
+  if(!selectedAttendees.includes(name))selectedAttendees.push(name);
+  renderTagChips();focusTagInput();
+}
+function closeTagDropdown(){document.getElementById('evt-attend-dropdown').classList.remove('show');tagHighlight=-1}
+function tagKeydown(e){
+  const dd=document.getElementById('evt-attend-dropdown');
+  const opts=dd.querySelectorAll('.tag-option');
+  if(e.key==='Tab'||e.key==='Enter'){
+    e.preventDefault();
+    if(opts.length&&tagHighlight>=0&&tagHighlight<opts.length){
+      opts[tagHighlight].onmousedown();
+    } else if(e.target.value.trim()&&roster.some(r=>r.name.toLowerCase()===e.target.value.trim().toLowerCase())){
+      const match=roster.find(r=>r.name.toLowerCase()===e.target.value.trim().toLowerCase());
+      pickAttendee(match.name);
+    }
+  } else if(e.key==='ArrowDown'){
+    e.preventDefault();if(opts.length){tagHighlight=Math.min(tagHighlight+1,opts.length-1);opts.forEach((o,i)=>o.classList.toggle('highlighted',i===tagHighlight))}
+  } else if(e.key==='ArrowUp'){
+    e.preventDefault();if(opts.length){tagHighlight=Math.max(tagHighlight-1,0);opts.forEach((o,i)=>o.classList.toggle('highlighted',i===tagHighlight))}
+  } else if(e.key==='Backspace'&&!e.target.value&&selectedAttendees.length){
+    selectedAttendees.pop();renderTagChips();focusTagInput();
+  } else if(e.key==='Escape'){closeTagDropdown()}
+}
+document.addEventListener('click',e=>{if(!document.getElementById('tag-container')?.contains(e.target))closeTagDropdown()});
+
+// MANAGEMENT TAB OVERRIDE
+(function(){
+  const orig=switchSection;
+  window.switchSection=function(s){
+    orig(s);
+    if(s==='calendar'){renderCalendar()}
+    if(s==='management'&&!mgmtAuthed){
+      document.getElementById('mgmt-gate').style.display='flex';
+      document.getElementById('mgmt-inner').style.display='none';
+      document.getElementById('mgmt-pw-input').value='';
+      document.getElementById('mgmt-pw-err').textContent='';
+      setTimeout(()=>document.getElementById('mgmt-pw-input').focus(),100);
+    }
+  };
+})();
+
 // ===== INIT =====
-buildItemCats();buildVehCats();buildWpnCats();renderItems();renderWeapons();renderVehicles();renderFavorites();buildIntFilters();
+buildItemCats();buildVehCats();buildWpnCats();renderItems();renderWeapons();renderVehicles();renderFavorites();buildIntFilters();renderCalendar();
 </script></body></html>
