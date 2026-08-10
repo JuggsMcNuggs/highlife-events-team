@@ -408,6 +408,9 @@ footer{text-align:center;padding:18px;font-size:.7rem;color:var(--t4);border-top
 <input type="password" id="mgmt-chg-old" placeholder="Current password" style="margin-bottom:10px">
 <label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">New Password</label>
 <input type="password" id="mgmt-chg-new" placeholder="New password" style="margin-bottom:10px">
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Confirm New Password</label>
+<input type="password" id="mgmt-chg-confirm" placeholder="Confirm new password" style="margin-bottom:6px">
+<label style="font-size:.7rem;color:var(--t3);cursor:pointer;display:flex;align-items:center;gap:6px;margin-bottom:10px"><input type="checkbox" onchange="['mgmt-chg-old','mgmt-chg-new','mgmt-chg-confirm'].forEach(id=>document.getElementById(id).type=this.checked?'text':'password')"> Show passwords</label>
 <div id="mgmt-chg-msg" style="font-size:.72rem;height:16px;margin-bottom:8px"></div>
 <button class="btn-accent" onclick="changeMgmtPw()">Update Password</button>
 </div>
@@ -1352,12 +1355,14 @@ function switchMgmt(panel){
 function changeMgmtPw(){
   const old=document.getElementById('mgmt-chg-old').value;
   const nw=document.getElementById('mgmt-chg-new').value;
+  const confirm=document.getElementById('mgmt-chg-confirm').value;
   const msg=document.getElementById('mgmt-chg-msg');
   if(old!==mgmtPassword){msg.style.color='var(--red)';msg.textContent='Wrong current password';return}
   if(!nw||nw.length<3){msg.style.color='var(--red)';msg.textContent='New password too short';return}
+  if(nw!==confirm){msg.style.color='var(--red)';msg.textContent='Passwords don\'t match';return}
   mgmtPwRef.set(nw);
   msg.style.color='var(--green)';msg.textContent='Password updated!';
-  document.getElementById('mgmt-chg-old').value='';document.getElementById('mgmt-chg-new').value='';
+  document.getElementById('mgmt-chg-old').value='';document.getElementById('mgmt-chg-new').value='';document.getElementById('mgmt-chg-confirm').value='';
 }
 function changeSiteCode(){
   const old=document.getElementById('mgmt-ac-old').value;
