@@ -226,15 +226,18 @@ footer{text-align:center;padding:18px;font-size:.7rem;color:var(--t4);border-top
 .mgmt-tab:hover{color:var(--t1)}
 .mgmt-tab.active{background:var(--accent);color:#000;border-color:transparent;font-weight:700}
 .mgmt-panel{display:none;padding:16px 28px}.mgmt-panel.active{display:block}
-.roster-list{display:flex;flex-direction:column;gap:0}
-.roster-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--brd)}
-.roster-row:hover{background:rgba(255,255,255,.02)}
-.roster-name{font-size:.88rem;font-weight:500;min-width:140px;flex-shrink:0}
-.roster-field{font-size:.78rem;color:var(--t2);font-family:var(--mono);cursor:pointer;padding:2px 8px;border-radius:4px;transition:background .15s}
+.roster-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.roster-card{background:var(--s1);border:1px solid var(--brd);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;transition:border-color .15s,transform .1s;position:relative;overflow:hidden}
+.roster-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity .2s;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.roster-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.roster-card:hover::before{opacity:1}
+.roster-card-name{font-size:.95rem;font-weight:600;color:var(--t1)}
+.roster-card-fields{display:flex;flex-direction:column;gap:4px}
+.roster-field{font-size:.75rem;color:var(--t2);font-family:var(--mono);cursor:pointer;padding:3px 8px;border-radius:4px;transition:background .15s;display:flex;align-items:center;gap:4px;background:var(--s2)}
 .roster-field:hover{background:var(--accentG);color:var(--accent)}
-.roster-field-label{font-size:.6rem;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;margin-right:2px}
-.roster-del{opacity:0;font-size:.72rem;color:var(--red);cursor:pointer;background:none;border:none;padding:4px 8px;transition:opacity .15s;font-family:var(--sans);margin-left:auto;flex-shrink:0}
-.roster-row:hover .roster-del{opacity:1}
+.roster-field-label{font-size:.58rem;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;font-weight:600;font-family:var(--sans)}
+.roster-card-actions{display:flex;gap:4px;margin-top:auto;padding-top:4px}
+.roster-empty-field{font-size:.72rem;color:var(--t4);font-style:italic;padding:3px 8px}
 .roster-add{display:flex;gap:8px;margin-bottom:16px}
 .roster-add input{flex:1;background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:9px 13px;color:var(--t1);font-family:var(--sans);font-size:.83rem;outline:none}
 .roster-add input:focus{border-color:var(--accent)}
@@ -443,6 +446,13 @@ footer{text-align:center;padding:18px;font-size:.7rem;color:var(--t4);border-top
 </div>
 <input type="hidden" id="evt-edit-id">
 <div class="modal-btns"><button class="btn-cancel" onclick="closeModal('modal-newevent')">Cancel</button><button class="btn-confirm" id="evt-save-btn" onclick="saveEvent()">Create</button><button class="btn-cancel" id="evt-del-btn" style="display:none;background:rgba(248,113,113,.1);border-color:var(--red);color:var(--red)" onclick="deleteEvent()">Delete</button></div></div></div>
+
+<div class="modal-overlay" id="modal-editroster"><div class="modal"><h3>Edit Team Member</h3>
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Name</label><input type="text" id="edit-roster-name">
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Discord</label><input type="text" id="edit-roster-dc">
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Steam ID</label><input type="text" id="edit-roster-steam">
+<input type="hidden" id="edit-roster-id">
+<div class="modal-btns"><button class="btn-cancel" onclick="closeModal('modal-editroster')">Cancel</button><button class="btn-confirm" onclick="saveRosterEdit()">Save</button><button class="btn-cancel" style="background:rgba(248,113,113,.1);border-color:var(--red);color:var(--red)" onclick="deleteRosterFromEdit()">Remove</button></div></div></div>
 
 <!-- MODALS -->
 <div class="modal-overlay" id="modal-customfav"><div class="modal"><h3>Add Custom Entry</h3>
@@ -1368,13 +1378,23 @@ function renderRoster(){
   const el=document.getElementById('roster-list');
   const cnt=document.getElementById('roster-count');
   if(cnt)cnt.textContent=roster.length+' team member'+(roster.length===1?'':'s');
-  if(!roster.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--t3);font-size:.85rem">No team members yet</div>';return}
+  if(!roster.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--t3);font-size:.85rem;grid-column:1/-1">No team members yet</div>';return}
   el.innerHTML=roster.map(r=>{
-    let h='<div class="roster-row">';
-    h+='<span class="roster-name">'+esc(r.name)+'</span>';
-    if(r.discord)h+='<span class="roster-field" onclick="copyField(\''+escAttr(r.discord)+'\',\'Discord\')" title="Click to copy"><span class="roster-field-label">DC</span>'+esc(r.discord)+'</span>';
-    if(r.steam)h+='<span class="roster-field" onclick="copyField(\''+escAttr(r.steam)+'\',\'Steam\')" title="Click to copy"><span class="roster-field-label">Steam</span>'+esc(r.steam)+'</span>';
-    h+='<button class="roster-del" onclick="removeRoster(\''+r.id+'\')">Remove</button>';
+    let h='<div class="roster-card">';
+    h+='<div class="roster-card-name">'+esc(r.name)+'</div>';
+    h+='<div class="roster-card-fields">';
+    if(r.discord){
+      h+='<div class="roster-field" onclick="copyField(\''+escAttr(r.discord)+'\',\'Discord\')" title="Click to copy"><span class="roster-field-label">Discord</span>'+esc(r.discord)+'</div>';
+    } else {
+      h+='<div class="roster-empty-field">No Discord</div>';
+    }
+    if(r.steam){
+      h+='<div class="roster-field" onclick="copyField(\''+escAttr(r.steam)+'\',\'Steam\')" title="Click to copy"><span class="roster-field-label">Steam</span>'+esc(r.steam)+'</div>';
+    } else {
+      h+='<div class="roster-empty-field">No Steam ID</div>';
+    }
+    h+='</div>';
+    h+='<div class="roster-card-actions"><button class="btn-sm" onclick="openRosterEdit(\''+r.id+'\')">Edit</button></div>';
     h+='</div>';
     return h;
   }).join('');
@@ -1391,6 +1411,31 @@ function addRosterMember(){
   nameInp.focus();toast('Added '+name);
 }
 function removeRoster(id){if(confirm('Remove this team member?'))rosterRef.child(id).remove()}
+function openRosterEdit(id){
+  const r=roster.find(x=>x.id===id);if(!r)return;
+  document.getElementById('edit-roster-name').value=r.name;
+  document.getElementById('edit-roster-dc').value=r.discord;
+  document.getElementById('edit-roster-steam').value=r.steam;
+  document.getElementById('edit-roster-id').value=id;
+  openModal('modal-editroster');
+}
+function saveRosterEdit(){
+  const id=document.getElementById('edit-roster-id').value;if(!id)return;
+  const name=document.getElementById('edit-roster-name').value.trim();
+  if(!name){toast('Name is required');return}
+  rosterRef.child(id).update({
+    name,
+    discord:document.getElementById('edit-roster-dc').value.trim(),
+    steam:document.getElementById('edit-roster-steam').value.trim()
+  });
+  closeModal('modal-editroster');toast('Updated '+name);
+}
+function deleteRosterFromEdit(){
+  const id=document.getElementById('edit-roster-id').value;if(!id)return;
+  if(!confirm('Remove this team member?'))return;
+  rosterRef.child(id).remove();
+  closeModal('modal-editroster');toast('Removed');
+}
 
 // CALENDAR RENDERING
 function daysInMonth(y,m){return new Date(y,m+1,0).getDate()}
