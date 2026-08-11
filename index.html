@@ -383,7 +383,8 @@ footer{text-align:center;padding:18px;font-size:.7rem;color:var(--t4);border-top
 <div class="roster-add">
 <input type="text" id="roster-name-input" placeholder="Name" onkeydown="if(event.key==='Enter')document.getElementById('roster-dc-input').focus()">
 <input type="text" id="roster-dc-input" placeholder="Discord" onkeydown="if(event.key==='Enter')document.getElementById('roster-steam-input').focus()">
-<input type="text" id="roster-steam-input" placeholder="Steam ID" onkeydown="if(event.key==='Enter')addRosterMember()">
+<input type="text" id="roster-steam-input" placeholder="Steam ID" onkeydown="if(event.key==='Enter')document.getElementById('roster-tz-input').focus()">
+<input type="text" id="roster-tz-input" placeholder="Timezone" onkeydown="if(event.key==='Enter')addRosterMember()">
 <button class="btn-accent" onclick="addRosterMember()">Add</button>
 </div>
 <div id="roster-count" style="font-size:.7rem;color:var(--t3);margin-bottom:12px"></div>
@@ -454,6 +455,7 @@ footer{text-align:center;padding:18px;font-size:.7rem;color:var(--t4);border-top
 <label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Name</label><input type="text" id="edit-roster-name">
 <label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Discord</label><input type="text" id="edit-roster-dc">
 <label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Steam ID</label><input type="text" id="edit-roster-steam">
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Timezone</label><input type="text" id="edit-roster-tz">
 <input type="hidden" id="edit-roster-id">
 <div class="modal-btns"><button class="btn-cancel" onclick="closeModal('modal-editroster')">Cancel</button><button class="btn-confirm" onclick="saveRosterEdit()">Save</button><button class="btn-cancel" style="background:rgba(248,113,113,.1);border-color:var(--red);color:var(--red)" onclick="deleteRosterFromEdit()">Remove</button></div></div></div>
 
@@ -474,6 +476,7 @@ footer{text-align:center;padding:18px;font-size:.7rem;color:var(--t4);border-top
 <label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Discord</label><input type="text" id="cand-discord" placeholder="Discord handle">
 <label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Steam ID</label><input type="text" id="cand-steam" placeholder="Steam ID">
 <label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Character Name</label><input type="text" id="cand-character" placeholder="In-game character name">
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Timezone</label><input type="text" id="cand-tz" placeholder="e.g. EST, CST, GMT">
 <div class="modal-btns"><button class="btn-cancel" onclick="closeModal('modal-newcandidate')">Cancel</button><button class="btn-confirm" onclick="createCandidate()">Add Candidate</button></div></div></div>
 
 <div class="modal-overlay" id="modal-editquestions"><div class="modal" style="width:600px"><h3>Interview Questions</h3><p style="font-size:.76rem;color:var(--t3);margin-bottom:14px">Changes apply to new interviews. Existing answers stay intact.</p><div class="q-editor-list" id="q-editor-list"></div><div style="margin-top:10px;display:flex;gap:8px"><input type="text" id="q-new-input" placeholder="Add a new question..." style="flex:1" onkeydown="if(event.key==='Enter')addQuestion()"><button class="btn-confirm" onclick="addQuestion()">Add</button></div><div class="modal-btns" style="margin-top:14px"><button class="btn-confirm" onclick="closeModal('modal-editquestions')">Done</button></div></div></div>
@@ -483,6 +486,7 @@ footer{text-align:center;padding:18px;font-size:.7rem;color:var(--t4);border-top
 <label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Discord</label><input type="text" id="edit-cand-discord" placeholder="Discord handle">
 <label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Steam ID</label><input type="text" id="edit-cand-steam" placeholder="Steam ID">
 <label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Character Name</label><input type="text" id="edit-cand-character" placeholder="In-game character name">
+<label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Timezone</label><input type="text" id="edit-cand-tz" placeholder="e.g. EST, CST, GMT">
 <div class="modal-btns"><button class="btn-cancel" onclick="closeModal('modal-editcandidate')">Cancel</button><button class="btn-confirm" onclick="saveEditCandidate()">Save</button></div></div></div>
 
 <div class="modal-overlay" id="modal-vote"><div class="modal"><h3>Cast Your Vote</h3><div style="display:flex;gap:10px;margin-bottom:12px"><button class="vote-btn yes" id="vote-yes-btn" onclick="selectVote('yes')" style="flex:1">YES</button><button class="vote-btn no" id="vote-no-btn" onclick="selectVote('no')" style="flex:1">NO</button></div><textarea id="vote-comment" placeholder="Optional comment..." style="min-height:60px"></textarea><div class="modal-btns"><button class="btn-cancel" onclick="closeModal('modal-vote')">Cancel</button><button class="btn-confirm" onclick="submitVote()">Submit</button></div></div></div>
@@ -1098,9 +1102,10 @@ function createCandidate(){
   const discord=document.getElementById('cand-discord').value.trim();
   const steam=document.getElementById('cand-steam').value.trim();
   const character=document.getElementById('cand-character').value.trim();
+  const timezone=document.getElementById('cand-tz').value.trim();
   if(!name){toast('Name is required');return}
-  candidatesRef.push({name,discord,steam,character,status:'Awaiting',answers:{},interviewDate:'',votes:[],created:Date.now(),addedBy:getUserName()});
-  ['cand-name','cand-discord','cand-steam','cand-character'].forEach(id=>document.getElementById(id).value='');
+  candidatesRef.push({name,discord,steam,character,timezone,status:'Awaiting',answers:{},interviewDate:'',votes:[],created:Date.now(),addedBy:getUserName()});
+  ['cand-name','cand-discord','cand-steam','cand-character','cand-tz'].forEach(id=>document.getElementById(id).value='');
   closeModal('modal-newcandidate');toast('Candidate added');
 }
 
@@ -1200,7 +1205,7 @@ function updateCandStatus(cid,s){
       const name=c.character||c.name;
       const alreadyExists=roster.some(r=>r.name.toLowerCase()===name.toLowerCase());
       if(!alreadyExists){
-        rosterRef.push({name,discord:c.discord||'',steam:c.steam||'',addedFrom:'interview',addedAt:Date.now()});
+        rosterRef.push({name,discord:c.discord||'',steam:c.steam||'',timezone:c.timezone||'',addedFrom:'interview',addedAt:Date.now()});
         toast(name+' added to roster');
       }
     }
@@ -1270,6 +1275,7 @@ function openEditCandidate(cid){
   document.getElementById('edit-cand-discord').value=c.discord||'';
   document.getElementById('edit-cand-steam').value=c.steam||'';
   document.getElementById('edit-cand-character').value=c.character||'';
+  document.getElementById('edit-cand-tz').value=c.timezone||'';
   document.getElementById('modal-editcandidate').dataset.cid=cid;
   openModal('modal-editcandidate');
 }
@@ -1282,7 +1288,8 @@ function saveEditCandidate(){
     name,
     discord:document.getElementById('edit-cand-discord').value.trim(),
     steam:document.getElementById('edit-cand-steam').value.trim(),
-    character:document.getElementById('edit-cand-character').value.trim()
+    character:document.getElementById('edit-cand-character').value.trim(),
+    timezone:document.getElementById('edit-cand-tz').value.trim()
   });
   closeModal('modal-editcandidate');
   toast('Candidate updated');
@@ -1328,7 +1335,7 @@ mgmtPwRef.on('value',s=>{if(s.exists())mgmtPassword=s.val();else mgmtPwRef.set('
 calRef.on('value',s=>{calEvents=s.exists()?s.val():{};renderCalendar();renderMcal()});
 rosterRef.on('value',s=>{
   roster=[];
-  if(s.exists())s.forEach(c=>{const v=c.val();roster.push({id:c.key,name:v.name,discord:v.discord||'',steam:v.steam||''})});
+  if(s.exists())s.forEach(c=>{const v=c.val();roster.push({id:c.key,name:v.name,discord:v.discord||'',steam:v.steam||'',timezone:v.timezone||''})});
   roster.sort((a,b)=>a.name.localeCompare(b.name));
   renderRoster();
 });
@@ -1387,6 +1394,7 @@ function renderRoster(){
   el.innerHTML=roster.map(r=>{
     let h='<div class="roster-card">';
     h+='<div class="roster-card-name">'+esc(r.name)+'</div>';
+    if(r.timezone)h+='<div style="font-size:.68rem;color:var(--accent2);margin-top:-4px">'+esc(r.timezone)+'</div>';
     h+='<div class="roster-card-fields">';
     if(r.discord){
       h+='<div class="roster-field" onclick="copyField(\''+escAttr(r.discord)+'\',\'Discord\')" title="Click to copy"><span class="roster-field-label">Discord</span>'+esc(r.discord)+'</div>';
@@ -1408,11 +1416,13 @@ function addRosterMember(){
   const nameInp=document.getElementById('roster-name-input');
   const dcInp=document.getElementById('roster-dc-input');
   const steamInp=document.getElementById('roster-steam-input');
+  const tzInp=document.getElementById('roster-tz-input');
   const name=nameInp.value.trim();if(!name){toast('Name is required');return}
   const discord=dcInp.value.trim();
   const steam=steamInp.value.trim();
-  rosterRef.push({name,discord,steam,addedAt:Date.now()});
-  nameInp.value='';dcInp.value='';steamInp.value='';
+  const timezone=tzInp.value.trim();
+  rosterRef.push({name,discord,steam,timezone,addedAt:Date.now()});
+  nameInp.value='';dcInp.value='';steamInp.value='';tzInp.value='';
   nameInp.focus();toast('Added '+name);
 }
 function removeRoster(id){if(confirm('Remove this team member?'))rosterRef.child(id).remove()}
@@ -1421,6 +1431,7 @@ function openRosterEdit(id){
   document.getElementById('edit-roster-name').value=r.name;
   document.getElementById('edit-roster-dc').value=r.discord;
   document.getElementById('edit-roster-steam').value=r.steam;
+  document.getElementById('edit-roster-tz').value=r.timezone;
   document.getElementById('edit-roster-id').value=id;
   openModal('modal-editroster');
 }
@@ -1431,7 +1442,8 @@ function saveRosterEdit(){
   rosterRef.child(id).update({
     name,
     discord:document.getElementById('edit-roster-dc').value.trim(),
-    steam:document.getElementById('edit-roster-steam').value.trim()
+    steam:document.getElementById('edit-roster-steam').value.trim(),
+    timezone:document.getElementById('edit-roster-tz').value.trim()
   });
   closeModal('modal-editroster');toast('Updated '+name);
 }
