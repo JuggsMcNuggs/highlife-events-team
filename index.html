@@ -238,6 +238,24 @@ footer{text-align:center;padding:18px;font-size:.7rem;color:var(--t4);border-top
 .roster-field-label{font-size:.58rem;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;font-weight:600;font-family:var(--sans)}
 .roster-card-actions{display:flex;gap:4px;margin-top:auto;padding-top:4px}
 .roster-empty-field{font-size:.72rem;color:var(--t4);font-style:italic;padding:3px 8px}
+
+/* ROSTER NOTES */
+.notes-modal-body{max-height:50vh;overflow-y:auto;margin-bottom:14px}
+.note-entry{background:var(--s2);border:1px solid var(--brd);border-radius:8px;padding:10px 12px;margin-bottom:8px;position:relative}
+.note-entry:hover{border-color:rgba(192,132,252,.3)}
+.note-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.note-author{font-size:.68rem;color:var(--accent);font-weight:500}
+.note-date{font-size:.62rem;color:var(--t4)}
+.note-text{font-size:.8rem;color:var(--t1);line-height:1.5;white-space:pre-wrap}
+.note-actions{display:flex;gap:6px;margin-top:6px;opacity:0;transition:opacity .15s}
+.note-entry:hover .note-actions{opacity:1}
+.note-actions button{background:none;border:none;font-size:.68rem;color:var(--t3);cursor:pointer;padding:2px 6px;font-family:var(--sans)}
+.note-actions button:hover{color:var(--accent)}
+.note-actions button.note-del:hover{color:var(--red)}
+.note-add-wrap{display:flex;gap:8px}
+.note-add-wrap textarea{flex:1;background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:9px 13px;color:var(--t1);font-family:var(--sans);font-size:.82rem;outline:none;resize:vertical;min-height:60px}
+.note-add-wrap textarea:focus{border-color:var(--accent)}
+.note-count{font-size:.62rem;color:var(--t4);margin-top:2px}
 .roster-add{display:flex;gap:8px;margin-bottom:16px}
 .roster-add input{flex:1;background:var(--s2);border:1px solid var(--brd);border-radius:7px;padding:9px 13px;color:var(--t1);font-family:var(--sans);font-size:.83rem;outline:none}
 .roster-add input:focus{border-color:var(--accent)}
@@ -458,6 +476,12 @@ footer{text-align:center;padding:18px;font-size:.7rem;color:var(--t4);border-top
 <label style="font-size:.7rem;color:var(--t3);display:block;margin-bottom:2px">Timezone</label><input type="text" id="edit-roster-tz">
 <input type="hidden" id="edit-roster-id">
 <div class="modal-btns"><button class="btn-cancel" onclick="closeModal('modal-editroster')">Cancel</button><button class="btn-confirm" onclick="saveRosterEdit()">Save</button><button class="btn-cancel" style="background:rgba(248,113,113,.1);border-color:var(--red);color:var(--red)" onclick="deleteRosterFromEdit()">Remove</button></div></div></div>
+
+<div class="modal-overlay" id="modal-rosternotes"><div class="modal" style="width:540px"><h3 id="notes-modal-name">Notes</h3>
+<div class="notes-modal-body" id="notes-list"></div>
+<div class="note-add-wrap"><textarea id="note-new-text" placeholder="Add a note..."></textarea><button class="btn-accent" onclick="addNote()" style="align-self:flex-end">Add</button></div>
+<input type="hidden" id="notes-roster-id">
+<div class="modal-btns" style="margin-top:14px"><button class="btn-cancel" onclick="closeModal('modal-rosternotes')">Close</button></div></div></div>
 
 <!-- MODALS -->
 <div class="modal-overlay" id="modal-customfav"><div class="modal"><h3>Add Custom Entry</h3>
@@ -1335,7 +1359,7 @@ mgmtPwRef.on('value',s=>{if(s.exists())mgmtPassword=s.val();else mgmtPwRef.set('
 calRef.on('value',s=>{calEvents=s.exists()?s.val():{};renderCalendar();renderMcal()});
 rosterRef.on('value',s=>{
   roster=[];
-  if(s.exists())s.forEach(c=>{const v=c.val();roster.push({id:c.key,name:v.name,discord:v.discord||'',steam:v.steam||'',timezone:v.timezone||''})});
+  if(s.exists())s.forEach(c=>{const v=c.val();const noteCount=v.notes?Object.keys(v.notes).length:0;roster.push({id:c.key,name:v.name,discord:v.discord||'',steam:v.steam||'',timezone:v.timezone||'',noteCount})});
   roster.sort((a,b)=>a.name.localeCompare(b.name));
   renderRoster();
 });
@@ -1407,7 +1431,8 @@ function renderRoster(){
       h+='<div class="roster-empty-field">No Steam ID</div>';
     }
     h+='</div>';
-    h+='<div class="roster-card-actions"><button class="btn-sm" onclick="openRosterEdit(\''+r.id+'\')">Edit</button></div>';
+    h+='<div class="roster-card-actions"><button class="btn-sm" onclick="openRosterEdit(\''+r.id+'\')">Edit</button><button class="btn-sm" onclick="openRosterNotes(\''+r.id+'\')">Notes</button></div>';
+    if(r.noteCount)h+='<div class="note-count">'+r.noteCount+' note'+(r.noteCount===1?'':'s')+'</div>';
     h+='</div>';
     return h;
   }).join('');
@@ -1453,6 +1478,88 @@ function deleteRosterFromEdit(){
   rosterRef.child(id).remove();
   closeModal('modal-editroster');toast('Removed');
 }
+
+// ROSTER NOTES
+let activeNotesId=null,activeNotesListener=null;
+function openRosterNotes(id){
+  const r=roster.find(x=>x.id===id);if(!r)return;
+  activeNotesId=id;
+  document.getElementById('notes-modal-name').textContent=r.name+' — Notes';
+  document.getElementById('notes-roster-id').value=id;
+  document.getElementById('note-new-text').value='';
+  // Live listener for this member's notes
+  if(activeNotesListener)rosterRef.child(activeNotesListener).child('notes').off();
+  activeNotesListener=id;
+  rosterRef.child(id).child('notes').on('value',snap=>{
+    const notes=[];
+    if(snap.exists())snap.forEach(c=>{notes.push({id:c.key,...c.val()})});
+    notes.sort((a,b)=>(b.created||0)-(a.created||0));
+    renderNotes(notes);
+  });
+  openModal('modal-rosternotes');
+}
+function renderNotes(notes){
+  const el=document.getElementById('notes-list');
+  if(!notes.length){el.innerHTML='<div style="text-align:center;padding:24px;color:var(--t3);font-size:.82rem">No notes yet</div>';return}
+  el.innerHTML=notes.map(n=>{
+    const d=new Date(n.created);
+    const dateStr=d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+    let h='<div class="note-entry" id="note-'+n.id+'">';
+    h+='<div class="note-meta"><span class="note-author">'+esc(n.author||'Unknown')+'</span><span class="note-date">'+dateStr+'</span></div>';
+    h+='<div class="note-text" id="note-text-'+n.id+'">'+esc(n.text)+'</div>';
+    h+='<textarea id="note-edit-'+n.id+'" style="display:none;width:100%;background:var(--s1);border:1px solid var(--brd);border-radius:6px;padding:8px;color:var(--t1);font-family:var(--sans);font-size:.8rem;resize:vertical;min-height:50px;outline:none">'+esc(n.text)+'</textarea>';
+    h+='<div class="note-actions">';
+    h+='<button onclick="startEditNote(\''+n.id+'\')">Edit</button>';
+    h+='<button id="note-savebtn-'+n.id+'" style="display:none;color:var(--accent)" onclick="saveEditNote(\''+n.id+'\')">Save</button>';
+    h+='<button id="note-cancelbtn-'+n.id+'" style="display:none" onclick="cancelEditNote(\''+n.id+'\')">Cancel</button>';
+    h+='<button class="note-del" onclick="deleteNote(\''+n.id+'\')">Delete</button>';
+    h+='</div></div>';
+    return h;
+  }).join('');
+}
+function addNote(){
+  const id=document.getElementById('notes-roster-id').value;if(!id)return;
+  const text=document.getElementById('note-new-text').value.trim();
+  if(!text){toast('Write something first');return}
+  rosterRef.child(id).child('notes').push({text,author:getUserName(),created:Date.now()});
+  document.getElementById('note-new-text').value='';
+  toast('Note added');
+}
+function startEditNote(nid){
+  document.getElementById('note-text-'+nid).style.display='none';
+  document.getElementById('note-edit-'+nid).style.display='block';
+  document.getElementById('note-savebtn-'+nid).style.display='inline';
+  document.getElementById('note-cancelbtn-'+nid).style.display='inline';
+  document.getElementById('note-edit-'+nid).focus();
+}
+function cancelEditNote(nid){
+  document.getElementById('note-text-'+nid).style.display='block';
+  document.getElementById('note-edit-'+nid).style.display='none';
+  document.getElementById('note-savebtn-'+nid).style.display='none';
+  document.getElementById('note-cancelbtn-'+nid).style.display='none';
+}
+function saveEditNote(nid){
+  const id=document.getElementById('notes-roster-id').value;if(!id)return;
+  const text=document.getElementById('note-edit-'+nid).value.trim();
+  if(!text){toast('Note can\'t be empty');return}
+  rosterRef.child(id).child('notes').child(nid).update({text,editedBy:getUserName(),editedAt:Date.now()});
+  toast('Note updated');
+}
+function deleteNote(nid){
+  const id=document.getElementById('notes-roster-id').value;if(!id)return;
+  if(!confirm('Delete this note?'))return;
+  rosterRef.child(id).child('notes').child(nid).remove();
+  toast('Note deleted');
+}
+// Clean up notes listener when modal closes
+const origCloseModal=closeModal;
+closeModal=function(mid){
+  if(mid==='modal-rosternotes'&&activeNotesListener){
+    rosterRef.child(activeNotesListener).child('notes').off();
+    activeNotesListener=null;activeNotesId=null;
+  }
+  origCloseModal(mid);
+};
 
 // CALENDAR RENDERING
 function daysInMonth(y,m){return new Date(y,m+1,0).getDate()}
